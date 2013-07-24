@@ -1,0 +1,14 @@
+extends layout-bootstrap
+
+block append body
+	.container: .span6.offset3
+		h1.page-header SSO Provider
+		form.form(method="POST")
+			legend Login
+			label User Name
+			input(name="name",type="text", placeholder="")
+			label Password
+			input(name="password",type="password", placeholder="Password")
+			label Email
+			input(name="email",type="text", placeholder="")
+			.form-actions: button.btn.btn-primary OK

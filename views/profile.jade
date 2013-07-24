@@ -1,0 +1,8 @@
+extends layout-bootstrap
+
+block append body
+	.container: .span6.offset3
+		h1.page-header Welcome, #{user.name}
+		form
+			legend Infomation
+			pre= JSON.stringify(user,null,"\t")

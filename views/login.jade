@@ -1,0 +1,11 @@
+extends layout-bootstrap
+
+block append body
+	.container: .span6.offset3
+		h1.page-header SSO Provider
+		form.form(method="POST")
+			legend Login
+			input(name="name",type="text", placeholder="User Name")
+			br
+			input(name="password",type="password", placeholder="Password")
+			.form-actions: button.btn.btn-primary OK

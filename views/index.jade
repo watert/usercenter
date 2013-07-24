@@ -1,5 +1,8 @@
-extends layout
-
-block content
-  h1= title
-  p Welcome to #{title}
+extends layout-bootstrap
+block append head
+	title= title
+block append body
+	.container
+		br
+		h1= title
+		p Welcome  to #{title}
