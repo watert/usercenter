@@ -1,25 +1,15 @@
-mongoose = require "mongoose"
-_ = require "underscore"
-urlLib = require "url"
+# mongoose = require "mongoose"
+# _ = require "underscore"
 
-
+# Models
 Ticket = require("../models/ticket").model
-
 User = require("../models/user").model
 
-# ucc = new (require("../src_clients/UserCenterClient").expressRouter)
-# console.log(ucc,ucc.expressRouter);
-
-
-
-request = require "request"
+#
 exports.init = (app,path)->
-	app.all "#{path}/*",(req,res,next)->
-		req.user = req.session?.user
-		next()
 	app.get "#{path}/test",require("../src_clients/UserCenterClient").expressRouter()
 	app.get "#{path}/test",(req,res)->
-		res.json "hello,#{req.user.name}"
+		res.json "hello,#{req.session.user.name}"
 	app.get path,(req,res)->
 		callback = req.query?.callback
 		Ticket.create req,(err,ticket)->
@@ -30,8 +20,6 @@ exports.init = (app,path)->
 				curUrl = req.protocol + "://" + req.get('host') + req.url
 				url = "#{path}/login?callback=#{curUrl}"
 				res.redirect url
-				# res.json err
-		# res.json req.session
 	app.post "#{path}/login",(req,res)->
 		User.login req.body,(err,user)->
 			req.session.user = user

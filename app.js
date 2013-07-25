@@ -40,7 +40,7 @@ app.post('/login', user.loginPost);
 app.post('/login', function(req,res){
 	res.redirect("/user/profile");
 });
-app.post('/regist', user.registPost);
+app.post('/user/regist', user.registPost);
 
 app.all('/api/users/', user.api);
 app.all('/api/users/:id', user.api);

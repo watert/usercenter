@@ -10,9 +10,9 @@ urlAddQuery = (url,query)->
 	urlLib.format urlObj
 class UserCenterClient
 	constructor:(@config)->
-
+	host:"localhost:3000"
 	getUser:(ticket,callback)->
-		baseUrl = "http://localhost:3000/sso"
+		baseUrl = "http://#{host}/sso"
 		console.log("getUser,ticket:",ticket)
 		urls = 
 			base:baseUrl
@@ -32,8 +32,11 @@ exports.client = UserCenterClient
 exports.expressRouter = (config)->
 	ucc = new UserCenterClient(config)
 	(req,res,next)->
+		# curUrl = req.protocol + "://" + req.get('host') + req.url
+		ucc.host ?= config.host
 		ucc.getUser req.query.ticket,(err,ret)->
 			if not err 
+				console.log req.get("host")
 				req.session.user = req.user = ret
 				next()
 			else 
