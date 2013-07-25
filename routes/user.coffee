@@ -8,8 +8,6 @@ User = require("../models/user").model
 query = (where,func)->
 	User.find().select("-password").exec (err,ret)-> 
 		res.jsonp ret
-
-
 exports.api = (req,res)->
 	method = req.route.method
 	data = req.data
