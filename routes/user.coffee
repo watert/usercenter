@@ -2,13 +2,8 @@ mongoose = require "mongoose"
 _ = require "underscore"
 crypto = require "crypto"
 # GET users listing.
-User = mongoose.model 'User', 
-	name: {type:"String",lowercase:true}
-	email: {type:"String",index: {unique: true, dropDups: true}}
-	password: "String"
-	authority: {}
-parsePassword = (password)->
-	crypto.createHash('sha512').update(password).digest('base64')
+User = require("../models/user").model
+
 
 query = (where,func)->
 	User.find().select("-password").exec (err,ret)-> 
@@ -20,7 +15,7 @@ exports.api = (req,res)->
 	data = req.data
 	id = req?.params?.id or null
 	if data and data.password 
-		data.password = parsePassword data.password
+		data.password = User.parsePassword data.password
 	switch method
 		when "get" 
 			User.find().select("-password").exec (err,ret)-> 
@@ -34,9 +29,7 @@ exports.api = (req,res)->
 
 exports.loginPost = (req,res,next)->
 	data = req.body
-	data.password = parsePassword data.password
-	# $or = [{password:data.password},{name:data.name}]
-	# User.find({$or:)
+	data.password = User.parsePassword data.password
 	User.findOne(data).select("-password").exec (err,ret)->
 		req.session.user = ret
 		next()
@@ -46,7 +39,7 @@ exports.login = (req,res)->
 	res.render "login"
 exports.registPost = (req,res)->
 	data = req.body
-	data.password = parsePassword data.password
+	data.password = User.parsePassword data.password
 	u = new User data
 	u.save (err,ret)->
 		console.log err,ret

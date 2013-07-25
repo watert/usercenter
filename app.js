@@ -45,6 +45,9 @@ app.post('/regist', user.registPost);
 app.all('/api/users/', user.api);
 app.all('/api/users/:id', user.api);
 
+require("./routes/sso").init(app,"/sso");
+app.all("/test/*",require("./routes/test").all)
+
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
 });
