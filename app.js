@@ -31,22 +31,35 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
+// Portal
 app.get('/', routes.index);
-app.get('/users', user.list);
+
+// Basic User Functions
 app.get('/user/profile', user.profile);
-app.get('/user/login', user.login);
 app.get('/user/regist', user.regist);
-app.post('/login', user.loginPost);
-app.post('/login', function(req,res){
+app.post('/user/regist', user.registPost);
+app.get('/user/login', user.login);
+app.post('/user/login', user.loginPost);
+app.post('/user/login', function(req,res){
 	res.redirect("/user/profile");
 });
-app.post('/user/regist', user.registPost);
 
+// User Management
+app.get('/users', function(req,res){ res.render("users"); });
+
+// API part
 app.all('/api/users/', user.api);
 app.all('/api/users/:id', user.api);
-
+//SSO part
 require("./routes/sso").init(app,"/sso");
-app.all("/test/*",require("./routes/test").all)
+
+app.all("/test/*",require("./routes/test").all);
+var ssoRouter = require("./src_clients/UserCenterClient")
+			.expressRouter({host:"waterwu.me:3003"});
+app.get("/ssotest",ssoRouter);
+app.get("/ssotest",function(req,res){
+	res.json("hello,"+req.session.user.name);
+});
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));

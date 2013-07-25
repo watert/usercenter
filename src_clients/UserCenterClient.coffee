@@ -11,9 +11,10 @@ urlAddQuery = (url,query)->
 class UserCenterClient
 	constructor:(@config)->
 	host:"localhost:3000"
-	getUser:(ticket,callback)->
+	getUser:(ticket,callbackUrl,callback)->
+		host = @config.host or @host
 		baseUrl = "http://#{host}/sso"
-		console.log("getUser,ticket:",ticket)
+		console.log("getUser,ticket:",ticket,baseUrl)
 		urls = 
 			base:baseUrl
 			check:"#{baseUrl}/check/"
@@ -26,15 +27,16 @@ class UserCenterClient
 					callback err,data
 		else 
 			url = urlAddQuery urls.base,
-				callback:urls.base+"/test/"
+				callback:callbackUrl
 			callback "redirect to url",url
 exports.client = UserCenterClient
 exports.expressRouter = (config)->
 	ucc = new UserCenterClient(config)
+	ucc.host ?= config.host
+	console.log "config",config,ucc
 	(req,res,next)->
-		# curUrl = req.protocol + "://" + req.get('host') + req.url
-		ucc.host ?= config.host
-		ucc.getUser req.query.ticket,(err,ret)->
+		curUrl = req.protocol + "://" + req.get('host') + req.url
+		ucc.getUser req.query.ticket,curUrl,(err,ret)->
 			if not err 
 				console.log req.get("host")
 				req.session.user = req.user = ret

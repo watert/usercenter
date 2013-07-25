@@ -7,9 +7,6 @@ User = require("../models/user").model
 
 #
 exports.init = (app,path)->
-	app.get "#{path}/test",require("../src_clients/UserCenterClient").expressRouter()
-	app.get "#{path}/test",(req,res)->
-		res.json "hello,#{req.session.user.name}"
 	app.get path,(req,res)->
 		callback = req.query?.callback
 		Ticket.create req,(err,ticket)->

@@ -32,7 +32,13 @@ exports.loginPost = (req,res,next)->
 		req.session.user = ret
 		next()
 exports.profile = (req,res)->
-	res.render "profile",req.session
+	user = req.session.user
+	hash = crypto.createHash('md5').update(user.email.toLowerCase().trim()).digest('hex')
+	user.gravatar = "http://www.gravatar.com/avatar/#{hash}"
+
+	if user
+		res.render "profile",user:user
+	else res.redirect "/user/login"
 exports.login = (req,res)->
 	res.render "login"
 exports.registPost = (req,res)->
@@ -40,7 +46,6 @@ exports.registPost = (req,res)->
 	data.password = User.parsePassword data.password
 	u = new User data
 	u.save (err,ret)->
-		console.log err,ret
 		if not err then res.jsonp ret:ret,msg:"success"
 		else res.jsonp err
 exports.regist = (req,res)->

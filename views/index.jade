@@ -1,8 +1,11 @@
 extends layout-bootstrap
 block append head
-	title= title
+	title Light Usercenter
 block append body
-	.container
-		br
-		h1= title
-		p Welcome  to #{title}
+	.container: .row
+		less
+			.footer {font-color:#CEF;}
+		.span6.offset3
+			h1.page-header Light Usercenter
+			p Welcome  to #{title}
+			p.footer proudly powered by @waterwu
