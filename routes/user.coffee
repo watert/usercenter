@@ -3,7 +3,11 @@ _ = require "underscore"
 crypto = require "crypto"
 # GET users listing.
 User = require("../models/user").model
-
+User.parse = (user)->
+	hash = crypto.createHash('md5').update(user.email.toLowerCase().trim()).digest('hex')
+	user = user.toJSON()
+	user.gravatar = "http://www.gravatar.com/avatar/#{hash}"
+	user
 
 query = (where,func)->
 	User.find().select("-password").exec (err,ret)-> 
@@ -12,12 +16,17 @@ exports.api = (req,res)->
 	method = req.route.method
 	data = req.data
 	id = req?.params?.id or null
+	if id is "my"
+		res.json req.session.user
+		return 
 	if data and data.password 
 		data.password = User.parsePassword data.password
 	switch method
 		when "get" 
 			User.find().select("-password").exec (err,ret)-> 
-				res.jsonp ret
+				console.log "parse",User.parse(ret[0])
+				res.jsonp (User.parse(row) for row in ret)
+				# res.jsonp ret
 		when "delete"
 			if not id then res.json "No ID",400
 			else User.findByIdAndRemove id,(err,ret)->
@@ -33,8 +42,7 @@ exports.loginPost = (req,res,next)->
 		next()
 exports.profile = (req,res)->
 	user = req.session.user
-	hash = crypto.createHash('md5').update(user.email.toLowerCase().trim()).digest('hex')
-	user.gravatar = "http://www.gravatar.com/avatar/#{hash}"
+	user = User.parse user
 
 	if user
 		res.render "profile",user:user

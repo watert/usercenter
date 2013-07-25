@@ -1,0 +1,35 @@
+extends layout-bootstrap
+block append head
+	title Light Usercenter
+	style(type="text/less").
+		.container{
+			.footer {
+				font-family:Cochin,Georgia;
+				border-top:1px dashed green;
+				margin:40px 0;
+				color:hsl(120,100%,35%); 
+			}
+		}
+	script
+		$.get("/api/users/",function(data){
+			var tmpl = $("#userList .hide");
+			_.each(data,function(row){
+				row.gravatar = row.gravatar+"?s=40";
+				tmpl.clone().insertBefore(tmpl).removeClass("hide")
+					.ldata(row);
+			});
+
+			tmpl.remove();
+		});
+block append body
+	.container: .row
+		.span6
+			h1.page-header 
+				| Admin
+			ul#userList.nav.nav-stacked.nav-tabs
+				li.hide: a(href="")
+
+					img(data-src="gravatar",src="")
+					| 
+					span(data-text="name")  asdf
+			include part-footer

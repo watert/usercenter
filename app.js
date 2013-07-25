@@ -45,7 +45,7 @@ app.post('/user/login', function(req,res){
 });
 
 // User Management
-app.get('/users', function(req,res){ res.render("users"); });
+app.get('/admin', function(req,res){ res.render("admin"); });
 
 // API part
 app.all('/api/users/', user.api);

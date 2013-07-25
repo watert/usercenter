@@ -1,11 +1,40 @@
 extends layout-bootstrap
 block append head
 	title Light Usercenter
+	style(type="text/less").
+		.container{
+			.footer {
+				font-family:Cochin,Georgia;
+				border-top:1px dashed green;
+				margin:40px 0;
+				color:hsl(120,100%,35%); 
+			}
+		}
+	script
+		$.get("/api/users/my",function(user){
+			if(!user)return;
+			$("#user-info").show().html("Welcome, <b>"+user.name+"</b> :)");	
+			if(user.name=="watert"){
+				$("#actionList li").show();
+			}
+
+		});
+
+
 block append body
 	.container: .row
-		less
-			.footer {font-color:#CEF;}
-		.span6.offset3
-			h1.page-header Light Usercenter
-			p Welcome  to #{title}
-			p.footer proudly powered by @waterwu
+		.span7
+			h1.page-header 
+				| Light Usercenter
+			.row
+				.span4
+					p.lead SSO Provider
+					p 
+				.span3
+
+					p#user-info.hide.text-info
+					ul#actionList.nav.nav-tabs.nav-stacked
+						li: a(href="/user/login") Login
+						li: a(href="/user/regist") Register
+						li.hide: a(href="/admin") Manage
+			include part-footer
