@@ -1,0 +1,18 @@
+doctype 5
+html
+	head
+		block head
+			include minified-web-src.js
+			script
+				window.$ = window.jQuery = require("minified").$
+				$.fn = $.prototype;
+				$.get = function(url,data,callback){
+					if(!callback){callback=data;data=null;}
+					$.request(url,data).then(callback);
+				};
+			include pure-min.css
+			script(src="/libs/underscore+backbone.js")
+			script(src="/libs/jQuery.lightDataBind.js")
+	body
+		block body
+		
