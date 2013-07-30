@@ -1,15 +1,8 @@
 extends layout-mini
 block append head
 	title Light Usercenter
-	style(type="text/less").
-		.container{
-			.footer {
-				font-family:Cochin,Georgia;
-				border-top:1px dashed green;
-				margin:40px 0;
-				color:hsl(120,100%,35%); 
-			}
-		}
+	style
+		.hide { display:none; }
 	script
 		$.get("/api/users/my",function(user){
 			if(!user)return;
@@ -17,7 +10,7 @@ block append head
 			if(user.name=="watert"){
 				$("#actionList li").show();
 			}
-
+			console.log(user);
 		});
 
 

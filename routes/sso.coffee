@@ -10,6 +10,7 @@ exports.init = (app,path)->
 	app.get path,(req,res)->
 		callback = req.query?.callback
 		Ticket.create req,(err,ticket)->
+
 			if not err and callback
 				url = Ticket.parseUrl callback,ticket
 				res.redirect url
@@ -28,7 +29,7 @@ exports.init = (app,path)->
 	app.get "#{path}/check",(req,res)->
 		ticket = req.query.ticket
 		if ticket then Ticket.check ticket,(err,user)->
-			console.log err,user
+
 			if not err then res.json user
 			else res.json err
 		# if Ticket.check

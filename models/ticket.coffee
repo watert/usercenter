@@ -1,12 +1,15 @@
 urlLib = require "url"
+querystring = require "querystring"
 mongoose = require "mongoose"
 
 urlAddQuery = (url,query)->
 	urlObj = urlLib.parse url
-	urlObj.query ?= {}
+	urlObj.query = querystring.parse(urlObj.query) or {}
+	delete urlObj.search
 	for k,v of query
-		urlObj.query[k]=v.toString()
-	urlLib.format urlObj
+		urlObj.query[k] = v?.toString() or v
+
+	url = urlLib.format urlObj
 
 timeout = 5*60*1000 #5分钟
 Ticket = mongoose.model 'Ticket', 

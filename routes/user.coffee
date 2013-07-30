@@ -5,7 +5,7 @@ crypto = require "crypto"
 User = require("../models/user").model
 User.parse = (user)->
 	hash = crypto.createHash('md5').update(user.email.toLowerCase().trim()).digest('hex')
-	user = user.toJSON()
+	user ?= user?.toJSON()
 	user.gravatar = "http://www.gravatar.com/avatar/#{hash}"
 	user
 
