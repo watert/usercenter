@@ -1,0 +1,47 @@
+extends layout-weblib
+block append head
+	:coffee
+		require ["bootstrap3"]
+		require ["app/base"],()-> $ ->
+			class UserModel extends Backbone.Model
+				url:"/user/api/my"
+			class Users extends Backbone.Collection
+				url:"/user/api/"
+			user = new UserModel()
+			$.fn.userView = (model)->
+				$user = $(this).ldata(model.toJSON())
+					.attr("data-user",model.get("name"))
+
+			user.fetch success:->
+				$(".article").userView(user)
+				$user = $(".user-info").userView(user)
+				if user.get("name") is "watert" #admin
+					users = new Users()
+					users.fetch success:->
+						$parent = $user.parent()
+						users.each (model)->
+							$userRow = $user.clone().appendTo($parent)
+							$userRow.userView(model)
+
+				console.log "hey",user.toJSON()
+
+block append body
+	.container
+		h1 User Profiles
+		.row
+			.col-sm-6
+				.panel.panel-default: .panel-body
+					h5.text-muted Hey
+					.user-info
+						img(data-src="gravatar",width=32,height=32).pull-left
+						a(data-text="name").btn.btn-link
+					hr
+					h5.text-muted Other Users
+			.col-sm-6.article
+				h2 
+					span(data-text="name")
+					span 's Profile
+				.row
+					.col-sm-3
+						img(data-src="gravatar")
+					.col-sm-9

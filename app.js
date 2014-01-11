@@ -35,21 +35,12 @@ if ('development' == app.get('env')) {
 app.get('/', routes.index);
 
 // Basic User Functions
-app.get('/user/profile', user.profile);
-app.get('/user/regist', user.regist);
-app.post('/user/regist', user.registPost);
-app.get('/user/login', user.login);
-app.post('/user/login', user.loginPost);
-app.post('/user/login', function(req,res){
-	res.redirect("/user/profile");
-});
+userRoute = require('./routes/user');
+userRoute.init(app);
 
 // User Management
 app.get('/admin', function(req,res){ res.render("admin"); });
 
-// API part
-app.all('/api/users/', user.api);
-app.all('/api/users/:id', user.api);
 //SSO part
 require("./routes/sso").init(app,"/sso");
 

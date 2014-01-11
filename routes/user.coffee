@@ -8,14 +8,28 @@ User.parse = (user)->
 	user ?= user?.toJSON()
 	user.gravatar = "http://www.gravatar.com/avatar/#{hash}"
 	user
-
+exports.init
 query = (where,func)->
 	User.find().select("-password").exec (err,ret)-> 
 		res.jsonp ret
+exports.init = (app,base="/user")->
+
+	app.get("#{base}/profile", exports.profile)
+	app.get("#{base}/regist", exports.regist)
+	app.post("#{base}/regist", exports.registPost)
+	app.get("#{base}/login", exports.login)
+	app.post("#{base}/login", exports.loginPost)
+	app.post "#{base}/login", (req,res)->
+		res.redirect("#{base}/profile")
+	# API part
+	app.all("#{base}/api/", exports.api)
+	app.all("#{base}/api/:id", exports.api)
+
 exports.api = (req,res)->
 	method = req.route.method
 	data = req.data
 	id = req?.params?.id or null
+	console.log "api route"
 	if id is "my"
 		res.json req.session.user
 		return 
@@ -23,6 +37,7 @@ exports.api = (req,res)->
 		data.password = User.parsePassword data.password
 	switch method
 		when "get" 
+			console.log "GET api"
 			User.find().select("-password").exec (err,ret)-> 
 				console.log "parse",User.parse(ret[0])
 				res.jsonp (User.parse(row) for row in ret)
@@ -45,7 +60,8 @@ exports.profile = (req,res)->
 	user = User.parse user
 
 	if user
-		res.render "profile",user:user
+		res.render "page-profiles",user:user
+		# res.render "profile",user:user
 	else res.redirect "/user/login"
 exports.login = (req,res)->
 	res.render "login"
