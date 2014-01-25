@@ -5,7 +5,7 @@ crypto = require "crypto"
 User = require("../models/user").model
 User.parse = (user)->
 	hash = crypto.createHash('md5').update(user.email.toLowerCase().trim()).digest('hex')
-	user ?= user?.toJSON()
+	user = user.toObject() if user.toObject
 	user.gravatar = "http://www.gravatar.com/avatar/#{hash}"
 	user
 exports.init
@@ -38,10 +38,13 @@ exports.api = (req,res)->
 	switch method
 		when "get" 
 			console.log "GET api"
-			User.find().select("-password").exec (err,ret)-> 
-				console.log "parse",User.parse(ret[0])
-				res.jsonp (User.parse(row) for row in ret)
-				# res.jsonp ret
+			User.find()
+				# .select("-password")
+				.exec (err,ret)-> 
+					console.log "userfind",err,ret
+					console.log "parse",User.parse(ret[0])
+					res.jsonp (User.parse(row) for row in ret)
+					# res.jsonp ret
 		when "delete"
 			if not id then res.json "No ID",400
 			else User.findByIdAndRemove id,(err,ret)->
@@ -52,11 +55,16 @@ exports.api = (req,res)->
 exports.loginPost = (req,res,next)->
 	data = req.body
 	data.password = User.parsePassword data.password
+	# console.log data,"login"
 	User.findOne(data).select("-password").exec (err,ret)->
-		req.session.user = ret
-		next()
+		if err then res.json "Login Error"
+		else if ret 
+			req.session.user = ret
+			next()
+		else res.json "Not Found"
 exports.profile = (req,res)->
 	user = req.session.user
+	console.log user,"profile"
 	user = User.parse user
 
 	if user

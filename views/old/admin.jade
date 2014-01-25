@@ -1,0 +1,23 @@
+extends layout-bootstrap
+block append head
+
+	script
+		$.get("/api/users/",function(data){
+			var tmpl = $("#userList .hide");
+			_.each(data,function(row){
+				row.gravatar = row.gravatar+"?s=40";
+				tmpl.clone().insertBefore(tmpl).removeClass("hide")
+					.ldata(row);
+			});
+			tmpl.remove();
+		});
+block append body
+	.container: .row
+		.span6
+			h1.page-header 
+				| Admin
+			ul#userList.nav.nav-stacked.nav-tabs
+				li.hide: a(href="")
+					img(data-src="gravatar",src="")
+					| 
+					span(data-text="name")  asdf

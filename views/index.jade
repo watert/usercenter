@@ -1,34 +1,37 @@
-extends layout-mini
+extends layout-weblib
 block append head
-	title Light Usercenter
-	style
-		.hide { display:none; }
-	script
-		$.get("/api/users/my",function(user){
-			if(!user)return;
-			$("#user-info").show().html("Welcome, <b>"+user.name+"</b> :)");	
-			if(user.name=="watert"){
-				$("#actionList li").show();
+	:less
+		#user {margin-top:40px;
+			.tab-pane{
+				@gap:10px;
+				.row {margin:0 -@gap/2;}
+				.col {padding:0 @gap/2 @gap;}
 			}
-			console.log(user);
-		});
-
-
+		}
+	:coffee
+		require ["js/page-entrance.js"]
 block append body
-	.container: .row
-		.span7
-			h1.page-header 
-				| Light Usercenter
-			.row
-				.span4
-					p.lead SSO Provider
-					p 
-				.span3
-
-					p#user-info.hide.text-info
-					ul#actionList.nav.nav-tabs.nav-stacked
-						li: a(href="/user/login") Login
-						li: a(href="/user/regist") Register
-						li: a(href="/user/profile") Profiles
-						li.hide: a(href="/admin") Manage
-			include part-footer
+	.container#user
+		ul.nav.nav-tabs
+			li.active: a(href="#login") Login
+			li: a(href="#signin") Sign in
+		br
+		.tab-content
+			.tab-pane.active#login
+				form.form(id="", method="POST", action="user/login"): .row
+					.col.col-sm-4: input.form-control(type="text",name="name",placeholder="User Name")
+					.col.col-sm-4: input.form-control(type="password",name="password",placeholder="Password")
+					.col.col-sm-4: button(type="submit").btn.btn-primary Login
+			.tab-pane#signin
+				form.form(id="", method="POST", action="user/regist"): .row
+					.col.col-sm-4
+						label Email
+						input.form-control(type="email",name="email",placeholder="Email")
+					.col.col-sm-4
+						label User Name
+						input.form-control(type="text",name="name",placeholder="User Name")
+					.col.col-sm-4
+						label Password
+						input.form-control(type="password",name="password",placeholder="Password")
+					.col.col-sm-12
+						button(type="submit").btn.btn-primary Login

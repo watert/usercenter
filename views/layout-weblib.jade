@@ -3,6 +3,17 @@ html
 	head
 		block head
 			//- include minified-web-src.js
-			script(src="http://localhost/weblib/pack.js.php")
+			base(href="/")
+			script(src="libs/require.js")
+			script(type="text/javascript", src="js/config.requirejs.js")
+			:less
+				.footer {margin:50px 0;padding:10px 0;border-top:1px solid #CCC;font-family:"Times new roman"}
+
+
+			:coffee
+				require ["bootstrap3"]
 	body
 		block body
+		.container
+			.footer
+				p.text-center.text-muted BUILD BY @WATERT. COPY RIGHT ALL RESERVED.
