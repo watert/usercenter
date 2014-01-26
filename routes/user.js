@@ -31,6 +31,11 @@
     if (base == null) {
       base = "/user";
     }
+    app.get("" + base + "/admin", function(req, res) {
+      return res.render("page-admin", {
+        user: req.session.user
+      });
+    });
     app.get("" + base + "/profile", exports.profile);
     app.get("" + base + "/regist", exports.regist);
     app.post("" + base + "/regist", exports.registPost);

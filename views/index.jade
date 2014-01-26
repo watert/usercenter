@@ -9,7 +9,8 @@ block append head
 			}
 		}
 	:coffee
-		require ["js/page-entrance.js"]
+		require ["backbone.marionette"],(BM)->
+			$(".nav-tabs a").click -> $(@).tab("show")
 block append body
 	.container#user
 		ul.nav.nav-tabs

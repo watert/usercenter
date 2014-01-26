@@ -1,0 +1,25 @@
+extends layout-weblib
+block append head
+	script(src="js/page-admin.js")
+block append body
+	#users.container
+	script(type="text/tmpl")#tmpl-users
+		h2 Users
+		table.table
+			thead: tr
+				th 
+				th Name
+				th Email
+				th
+			tbody#users-tbody
+	script(type="text/tmpl")#tmpl-user-tr
+		td: label.label: input(type="checkbox")
+		td: | <%=name%>
+		td: | <%=email%>
+		td
+			button.btn.btn-sm.btn-link: i.glyphicon.glyphicon-trash
+			span.dropdown
+				span.dropdown-toggle.btn.btn-sm.btn-default(data-toggle="dropdown")   
+					span.caret
+				ul.dropdown-menu
+					li: a act

@@ -1,6 +1,6 @@
 extends layout-weblib
 block append head
-	script(src="js/page-admin.js")
+	script(src="js/page-profiles.js")
 block append body
 	.navbar.navbar-default:.navbar-inner
 		.container
@@ -10,19 +10,18 @@ block append body
 
 	.container
 		.row
+			.col-sm-6.article#greeting
 			.col-sm-6
 				.panel.panel-default: .panel-body
 					h5.text-muted Other Users
 					ul.users.nav.nav-list.row
-			.col-sm-6.article
-				h2 
-					span(data-text="name")
-					span 's Profile
-				.row
-					.col-sm-3
-						img(data-src="gravatar")
-					.col-sm-9
-
 	script(type="text/tmpl")#user-item
 		img(src!="<%=gravatar%>",width=32,height=32)
 		a(data-text="name").btn.btn-link <%=name%>
+	script(type="text/tmpl")#tmpl-greeting
+		p.lead 
+			| Greeting, 
+			img(src!="<%=gravatar%>",width=32,height=32)
+			|  <%=name%>.
+		p.lead You are successfully logined.
+		a.btn.btn-default(href="user/admin", target="_blank") Go to admin

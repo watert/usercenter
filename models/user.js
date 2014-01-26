@@ -21,7 +21,7 @@
       type: "String",
       unique: false
     },
-    authority: {}
+    role: "String"
   });
 
   User.parsePassword = function(password) {

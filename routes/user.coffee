@@ -14,6 +14,8 @@ query = (where,func)->
 		res.jsonp ret
 exports.init = (app,base="/user")->
 
+	app.get "#{base}/admin", (req,res)-> 
+		res.render("page-admin",user:req.session.user)
 	app.get("#{base}/profile", exports.profile)
 	app.get("#{base}/regist", exports.regist)
 	app.post("#{base}/regist", exports.registPost)
