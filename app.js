@@ -31,12 +31,16 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
-// Portal
-app.get('/', routes.index);
-
 // Basic User Functions
 userRoute = require('./routes/user');
 userRoute.init(app);
+// Portal
+app.get('/', function(req,res){ 
+	user = userRoute.userByReq(req);
+	if(!user)res.render("index"); 
+	else res.redirect("/user/profile");
+});
+
 
 // User Management
 app.get('/admin', function(req,res){ res.render("admin"); });

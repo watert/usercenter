@@ -7,19 +7,19 @@ block append body
 		h2 Users
 		table.table
 			thead: tr
-				th 
+				th Select
 				th Name
-				th Email
+				th.hidden-xs Email
 				th
 			tbody#users-tbody
 	script(type="text/tmpl")#tmpl-user-tr
 		td: label.label: input(type="checkbox")
 		td: | <%=name%>
-		td: | <%=email%>
+		td.hidden-xs: | <%=email%>
 		td
-			button.btn.btn-sm.btn-link: i.glyphicon.glyphicon-trash
-			span.dropdown
-				span.dropdown-toggle.btn.btn-sm.btn-default(data-toggle="dropdown")   
-					span.caret
-				ul.dropdown-menu
-					li: a act
+			button.btn.btn-sm.btn-edit.btn-link Edit
+			//- span.dropdown
+			//- 	span.dropdown-toggle.btn.btn-sm.btn-default(data-toggle="dropdown")   
+			//- 		span.caret
+			//- 	ul.dropdown-menu
+			//- 		li: a act

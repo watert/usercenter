@@ -1,3 +1,15 @@
+/* 
+	# Init with app
+	userRoute = require("./routes/user.coffee") 
+	userRoute.init(app,"/user/")
+	app.get "/",(req,res)->
+		user = userRoute.userByReq(req) #get user
+
+
+	Getting User:
+*/
+
+
 (function() {
   var User, crypto, mongoose, query, _;
 
@@ -25,6 +37,11 @@
     return User.find().select("-password").exec(function(err, ret) {
       return res.jsonp(ret);
     });
+  };
+
+  exports.userByReq = function(req) {
+    var _ref;
+    return req != null ? (_ref = req.session) != null ? _ref.user : void 0 : void 0;
   };
 
   exports.init = function(app, base) {
@@ -63,11 +80,8 @@
     }
     switch (method) {
       case "get":
-        console.log("GET api");
-        return User.find().exec(function(err, ret) {
+        return User.find().select("-password").exec(function(err, ret) {
           var row;
-          console.log("userfind", err, ret);
-          console.log("parse", User.parse(ret[0]));
           return res.jsonp((function() {
             var _i, _len, _results;
             _results = [];
@@ -83,7 +97,6 @@
           return res.json("No ID", 400);
         } else {
           return User.findByIdAndRemove(id, function(err, ret) {
-            console.log("delete", err, ret);
             if (!err) {
               return res.json("success");
             } else {

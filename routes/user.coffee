@@ -1,3 +1,13 @@
+### 
+	# Init with app
+	userRoute = require("./routes/user.coffee") 
+	userRoute.init(app,"/user/")
+	app.get "/",(req,res)->
+		user = userRoute.userByReq(req) #get user
+
+
+	Getting User:
+###
 mongoose = require "mongoose"
 _ = require "underscore"
 crypto = require "crypto"
@@ -12,8 +22,9 @@ exports.init
 query = (where,func)->
 	User.find().select("-password").exec (err,ret)-> 
 		res.jsonp ret
-exports.init = (app,base="/user")->
+exports.userByReq = (req)-> req?.session?.user
 
+exports.init = (app,base="/user")->
 	app.get "#{base}/admin", (req,res)-> 
 		res.render("page-admin",user:req.session.user)
 	app.get("#{base}/profile", exports.profile)
@@ -26,7 +37,6 @@ exports.init = (app,base="/user")->
 	# API part
 	app.all("#{base}/api/", exports.api)
 	app.all("#{base}/api/:id", exports.api)
-
 exports.api = (req,res)->
 	method = req.route.method
 	data = req.data
@@ -39,18 +49,12 @@ exports.api = (req,res)->
 		data.password = User.parsePassword data.password
 	switch method
 		when "get" 
-			console.log "GET api"
-			User.find()
-				# .select("-password")
+			User.find().select("-password")
 				.exec (err,ret)-> 
-					console.log "userfind",err,ret
-					console.log "parse",User.parse(ret[0])
 					res.jsonp (User.parse(row) for row in ret)
-					# res.jsonp ret
 		when "delete"
 			if not id then res.json "No ID",400
 			else User.findByIdAndRemove id,(err,ret)->
-				console.log "delete",err,ret
 				if not err then res.json "success"
 				else res.json err,400
 
