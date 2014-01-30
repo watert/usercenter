@@ -11,7 +11,7 @@
 
 
 (function() {
-  var User, crypto, mongoose, query, _;
+  var User, crypto, mongoose, query, userByReq, _;
 
   mongoose = require("mongoose");
 
@@ -23,6 +23,7 @@
 
   User.parse = function(user) {
     var hash;
+    delete user.password;
     hash = crypto.createHash('md5').update(user.email.toLowerCase().trim()).digest('hex');
     if (user.toObject) {
       user = user.toObject();
@@ -39,9 +40,24 @@
     });
   };
 
-  exports.userByReq = function(req) {
-    var _ref;
-    return req != null ? (_ref = req.session) != null ? _ref.user : void 0 : void 0;
+  userByReq = function(req, callback) {
+    var user, _ref;
+    if (callback == null) {
+      callback = function() {
+        return false;
+      };
+    }
+    user = req != null ? (_ref = req.session) != null ? _ref.user : void 0 : void 0;
+    User.findById(user != null ? user._id : void 0).exec(function(err, data) {
+      return callback(err, data);
+    });
+    return user;
+  };
+
+  exports.userByReq = userByReq;
+
+  exports.logout = function(req) {
+    return req.session.user = false;
   };
 
   exports.init = function(app, base) {
@@ -49,28 +65,40 @@
       base = "/user";
     }
     app.get("" + base + "/admin", function(req, res) {
-      return res.render("page-admin", {
-        user: req.session.user
+      return userByReq(req, function(err, user) {
+        if (!user) {
+          return res.redirect("" + base + "/");
+        } else {
+          return res.render("page-admin");
+        }
       });
     });
     app.get("" + base + "/profile", exports.profile);
     app.get("" + base + "/regist", exports.regist);
     app.post("" + base + "/regist", exports.registPost);
-    app.get("" + base + "/login", exports.login);
+    app.get("" + base, exports.index);
+    app.get("" + base + "/index", exports.index);
     app.post("" + base + "/login", exports.loginPost);
     app.post("" + base + "/login", function(req, res) {
       return res.redirect("" + base + "/profile");
+    });
+    app.get("" + base + "/logout", function(req, res) {
+      exports.logout(req);
+      return res.redirect("" + base + "/");
     });
     app.all("" + base + "/api/", exports.api);
     return app.all("" + base + "/api/:id", exports.api);
   };
 
+  exports.index = function(req, res) {
+    return res.render("index");
+  };
+
   exports.api = function(req, res) {
     var data, id, method, _ref;
     method = req.route.method;
-    data = req.data;
+    data = req.data || req.body;
     id = (req != null ? (_ref = req.params) != null ? _ref.id : void 0 : void 0) || null;
-    console.log("api route");
     if (id === "my") {
       res.json(req.session.user);
       return;
@@ -80,7 +108,9 @@
     }
     switch (method) {
       case "get":
-        return User.find().select("-password").exec(function(err, ret) {
+        return User.find().select("-password").sort({
+          "_id": 1
+        }).exec(function(err, ret) {
           var row;
           return res.jsonp((function() {
             var _i, _len, _results;
@@ -92,13 +122,27 @@
             return _results;
           })());
         });
+      case "put":
+        if (!id) {
+          return res.json("No ID", 400);
+        } else {
+          return User.findById(id, function(err, model) {
+            return model != null ? model.set(data).save(function(err) {
+              if (!err) {
+                return res.json(User.parse(model));
+              }
+            }) : void 0;
+          });
+        }
+        break;
       case "delete":
         if (!id) {
           return res.json("No ID", 400);
         } else {
           return User.findByIdAndRemove(id, function(err, ret) {
             if (!err) {
-              return res.json("success");
+              res.json("success");
+              return exports.logout();
             } else {
               return res.json(err, 400);
             }
@@ -133,12 +177,12 @@
         user: user
       });
     } else {
-      return res.redirect("/user/login");
+      return res.redirect("" + base + "/");
     }
   };
 
-  exports.login = function(req, res) {
-    return res.render("login");
+  exports.index = function(req, res) {
+    return res.render("index");
   };
 
   exports.registPost = function(req, res) {
@@ -148,10 +192,7 @@
     u = new User(data);
     return u.save(function(err, ret) {
       if (!err) {
-        return res.jsonp({
-          ret: ret,
-          msg: "success"
-        });
+        return res.redirect("" + base + "/profile");
       } else {
         return res.jsonp(err);
       }

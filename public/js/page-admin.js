@@ -33,7 +33,7 @@
         footer: ".modal-footer"
       };
 
-      ModalView.prototype.template = _.template("<div class=\"modal-dialog\">\n  <div class=\"modal-content\">\n    <div class=\"modal-header\">\n      <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-hidden=\"true\">&times;</button>\n      <h4 class=\"modal-title\">Modal title</h4>\n    </div>\n    <div class=\"modal-body\">\n    </div>\n    <div class=\"modal-footer\">\n      	        <button type=\"button\" class=\"btn btn-primary btn-save\" data-dismiss=\"modal\">Save</button>\n      	        <button type=\"button\" class=\"btn pull-left btn-danger btn-destroy\" data-dismiss=\"modal\">\n					<i class=\"glyphicon glyphicon-trash\"></i> Destroy\n      	        </button>\n      	        <button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">Close</button>\n    </div>\n  </div><!-- /.modal-content -->\n</div><!-- /.modal-dialog -->");
+      ModalView.prototype.template = _.template("<div class=\"modal-dialog\">\n  <div class=\"modal-content\">\n    <div class=\"modal-header\">\n      <button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-hidden=\"true\">&times;</button>\n      <h4 class=\"modal-title\">Modal title</h4>\n    </div>\n    <div class=\"modal-body\">\n    </div>\n  </div><!-- /.modal-content -->\n</div><!-- /.modal-dialog -->");
 
       ModalView.prototype.modal = function(a, b, c) {
         this.$el.modal(a, b, c);
@@ -43,6 +43,10 @@
       ModalView.prototype.show = function(view) {
         var html;
         this.body.show(view);
+        if (this.model == null) {
+          this.model = view.model;
+        }
+        view.modalView = this;
         if (view.title) {
           this.$(".modal-title").html(view.title);
         }
@@ -54,11 +58,10 @@
       };
 
       ModalView.prototype.renderModal = function() {
-        var data, render, _ref;
-        data = (_ref = this.options) != null ? _ref.model : void 0;
+        var render;
         render = Marionette.Renderer.render;
         if (this.templateFooter) {
-          this.$(".modal-footer").prepend(render(this.templateFooter, data));
+          this.$(".modal-footer").prepend(render(this.templateFooter));
         }
         if (this.options.title) {
           return this.$(".modal-title").html(this.options.title);
@@ -86,7 +89,32 @@
         return _ref;
       }
 
-      UserEditor.prototype.template = _.template(" \n<label for=\"\">JSON Data</label>\n<textarea class=\"form-control\" name=\"json\" rows=\"10\"></textarea>");
+      UserEditor.prototype.template = _.template(" \n<div class=\"form-group\">\n	<label for=\"\">JSON Data</label>\n	<textarea class=\"form-control\" name=\"json\" rows=\"10\"></textarea>\n</div>\n<p>\n      	        <button type=\"button\" class=\"btn btn-danger btn-destroy\">\n		<i class=\"glyphicon glyphicon-trash\"></i> Destroy\n      	        </button>\n      	        <span class=\"pull-right\"><button type=\"button\" class=\"btn btn-primary btn-save\">Save</button>\n      	        	<button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">Close</button></span>\n      	    </p>");
+
+      UserEditor.prototype.events = {
+        "click .btn-destroy": function() {
+          if (confirm("Sure to delete this user?")) {
+            this.model.destroy();
+            return this.modalView.modal("hide");
+          }
+        },
+        "click .btn-save": function() {
+          var data, e,
+            _this = this;
+          try {
+            data = $.parseJSON(this.$("[name=json]").val());
+            return this.model.save(data, {
+              success: function() {
+                alert("User Data Saved Successfully.");
+                return _this.modalView.modal("hide");
+              }
+            });
+          } catch (_error) {
+            e = _error;
+            return console.log("save err", e);
+          }
+        }
+      };
 
       UserEditor.prototype.onRender = function() {
         var json;
@@ -121,6 +149,13 @@
       }
 
       Users.prototype.url = "/user/api/";
+
+      Users.prototype.model = Backbone.Model.extend({
+        idAttribute: "_id",
+        defaults: {
+          role: "guest"
+        }
+      });
 
       return Users;
 
@@ -176,7 +211,6 @@
             events: {
               "click .btn-edit": function(e) {
                 e.preventDefault();
-                console.log("edit", this.model);
                 return ctrl.editUser(this.model);
               }
             }
@@ -188,7 +222,6 @@
         tableView.render();
         return users.fetch({
           success: function() {
-            console.log(users.toJSON());
             return tableView.render();
           }
         });

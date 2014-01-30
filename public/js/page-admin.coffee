@@ -31,13 +31,6 @@ require ["backbone.marionette"],(BM)->
 		      </div>
 		      <div class="modal-body">
 		      </div>
-		      <div class="modal-footer">
-      	        <button type="button" class="btn btn-primary btn-save" data-dismiss="modal">Save</button>
-      	        <button type="button" class="btn pull-left btn-danger btn-destroy" data-dismiss="modal">
-					<i class="glyphicon glyphicon-trash"></i> Destroy
-      	        </button>
-      	        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-		      </div>
 		    </div><!-- /.modal-content -->
 		  </div><!-- /.modal-dialog -->
 		"""
@@ -46,17 +39,16 @@ require ["backbone.marionette"],(BM)->
 			return @
 		show:(view)->
 			@body.show(view)
+			@model ?= view.model
+			view.modalView = @
 			if view.title then @$(".modal-title").html(view.title)
 			if view.templateFooter 
 				html = Marionette.Renderer.render(view.templateFooter,data)
 				@$(".modal-footer").prepend html
 			return @
 		renderModal:()->
-			# _.extend this,_.pick(@options,"templateBody","templateFooter","title")
-			data = @options?.model
 			render = Marionette.Renderer.render
-			# if @templateBody then @$(".modal-body").html render(@templateBody,data)
-			if @templateFooter then @$(".modal-footer").prepend render(@templateFooter,data)
+			if @templateFooter then @$(".modal-footer").prepend render(@templateFooter)
 			if @options.title then @$(".modal-title").html(@options.title)
 		constructor:(options)->
 			super(options)
@@ -66,14 +58,34 @@ require ["backbone.marionette"],(BM)->
 
 	class UserEditor extends BM.ItemView
 		template:_.template """ 
-			<label for="">JSON Data</label>
-			<textarea class="form-control" name="json" rows="10"></textarea>
+			<div class="form-group">
+				<label for="">JSON Data</label>
+				<textarea class="form-control" name="json" rows="10"></textarea>
+			</div>
+			<p>
+      	        <button type="button" class="btn btn-danger btn-destroy">
+					<i class="glyphicon glyphicon-trash"></i> Destroy
+      	        </button>
+      	        <span class="pull-right"><button type="button" class="btn btn-primary btn-save">Save</button>
+      	        	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button></span>
+      	    </p>
 		"""
+		events:
+			"click .btn-destroy":()->
+				if confirm("Sure to delete this user?")
+					@model.destroy()
+					@modalView.modal("hide")
+				
+			"click .btn-save":()->
+				try 
+					data = $.parseJSON @$("[name=json]").val()
+					@model.save data,success:=>
+						alert("User Data Saved Successfully.")
+						@modalView.modal("hide")
+				catch e then console.log "save err",e
 		onRender:()->
 			json = JSON.stringify @model.toJSON(),null,4
 			@$("[name=json]").val(json) if @model
-
-
 
 	class QuickView extends BM.CompositeView
 		constructor:(options,b,c,d)->
@@ -82,6 +94,10 @@ require ["backbone.marionette"],(BM)->
 			super(options,b,c,d)
 	class Users extends Backbone.Collection
 		url:"/user/api/"
+		model:Backbone.Model.extend
+			idAttribute:"_id"
+			defaults:
+				role:"guest"
 	class UserTableView extends BM.CompositeView
 		template:"#tmpl-users"
 		itemViewContainer:"#users-tbody"
@@ -106,21 +122,14 @@ require ["backbone.marionette"],(BM)->
 					events:
 						"click .btn-edit":(e)->
 							e.preventDefault()
-							console.log "edit",@model
 							ctrl.editUser(@model)
-				# implement attrs
 				itemViewContainer:"#users-tbody"
+				# implement attrs
 				el:"#users"
 				collection:users
 			tableView.render()
 			users.fetch success:->
-				console.log users.toJSON()
 				tableView.render()
 
-			# v = new QuickView
-			# 	template:_.template """<%=key%>,<%=value%>"""
-			# 	model:new Backbone.Model(key:"keykey",value:"vv")
-			# v.render()
-			# $ -> v.$el.appendTo($("body"))
 	window.app = app = new BM.Application()
 	$ -> app.ctrl = new AdminController()
