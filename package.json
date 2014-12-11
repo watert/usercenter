@@ -6,7 +6,10 @@
     "start": "node app.js"
   },
   "dependencies": {
+    "coffee-script": "^1.8.0",
     "express": "3.3.4",
-    "jade": "0.34.1"
+    "jade": "0.34.1",
+    "less": "^2.1.1",
+    "underscore": "^1.7.0"
   }
 }

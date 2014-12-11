@@ -2,7 +2,7 @@
 /**
  * Module dependencies.
  */
-require("coffee-script");
+require("coffee-script/register");
 var express = require('express')
   , routes = require('./routes')
   , user = require('./routes/user')

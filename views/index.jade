@@ -1,16 +1,13 @@
 extends layout-weblib
 block append head
-	:less
-		#user {margin-top:40px;
-			.tab-pane{
-				@gap:10px;
-				.row {margin:0 -@gap/2;}
-				.col {padding:0 @gap/2 @gap;}
-			}
-		}
-	:coffee
-		require ["backbone.marionette"],(BM)->
-			$(".nav-tabs a").click -> $(@).tab("show")
+
+	script(type="text/javascript").
+		require(["backbone.marionette"],function(BM){
+			$(".nav-tabs a").click(function(){	
+				$(this).tab("show")
+			})
+		})
+			
 block append body
 	.container#user
 		ul.nav.nav-tabs
