@@ -2,11 +2,81 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Lean User</title>
+	<title>Usercenter</title>
 	<% include _header.ejs %>
+	<script>
+		require(["app","bootstrap"],function(){
+			$(function(){
+				var $tabs = $(".nav-tabs a").click(function(){
+					$(this).tab("show");
+				}).first().click();
+				console.debug("$tabs",$tabs)
+			});
+		});
+	</script>
 </head>
-<body>
-	<h1><%=title%></h1>
-	<p>Welcome to <%=title%></p>
+<body class="auth">
+	<div class="container">
+		<div class="row">
+			<div class="col-md-6">
+			
+				<div class="jumbotron">
+					<div class="container">
+						<div class="">
+							<h1>Common Login</h1>
+						</div>
+						<p> For common use of common login/register/sso </p>
+						<p> And for common role and auth managing also </p>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<ul class="nav nav-tabs">
+					<li class=""><a href="#login" data-toggle="tab">Login</a></li>
+					<li><a href="#register" data-toggle="tab">Register</a></li>
+				</ul>
+				<div class="tab-content">
+					<div class="tab-pane" id="login">
+						<form action="login" class="form">
+							<div class="form-group">
+								<label>User</label>
+								<input type="text" name="user" class="form-control">
+							</div>
+							<div class="form-group">
+								<label>Password</label>
+								<input type="password" name="password" class="form-control">
+							</div>
+							<div class="form-actions">
+								<button class="btn btn-primary">Login</button>
+							</div>
+						</form>
+					</div>
+					<div class="tab-pane" id="register">
+						<form action="login" class="form">
+							<div class="form-group">
+								<label>User</label>
+								<input type="text" name="user" class="form-control">
+							</div>
+							<div class="form-group">
+								<label>Email</label>
+								<input type="email" name="email" class="form-control">
+							</div>
+							<div class="form-group">
+								<label>Password</label>
+								<input type="password" name="password" class="form-control">
+							</div>
+							<div class="form-actions">
+								<button class="btn btn-primary">Register</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="footer text-center text-muted">
+		<hr>
+		by @watert
+	</div>
 </body>
 </html>
