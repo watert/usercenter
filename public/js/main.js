@@ -5,6 +5,7 @@
 
   require(["app", "routers/user"], function(app, UserRouter) {
     var MainRouter;
+    window.App = app;
     MainRouter = (function(_super) {
       __extends(MainRouter, _super);
 

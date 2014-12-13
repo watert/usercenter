@@ -15,7 +15,7 @@
       name: "_testusername",
       password: "_testpass",
       email: "_test@email.com",
-      profile: "Profile content"
+      profile: "Nullam quis risus eget urna mollis ornare vel eu leo. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nullam id dolor id nibh ultricies vehicula."
     };
     promiseRequest = function(originalDfd) {
       return $.when(new User(testData));

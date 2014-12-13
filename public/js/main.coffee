@@ -1,4 +1,5 @@
 require ["app","routers/user"],(app,UserRouter)->
+	window.App = app
 	class MainRouter extends Backbone.Router
 		routes:
 			"":()-> @navigate "user/sign",replace:yes,trigger:yes

@@ -1,10 +1,29 @@
 body {
-  padding: 50px 0;
+  padding:0 0  50px 0;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  .footer {margin-top: 50px;}
 }
 
-body.auth {
-	.nav-tabs {margin-bottom: 10px;}
+.panel-auth {
+	box-shadow: none;
+	.nav-tabs {margin-bottom: 10px;
+		a {color:#666;}
+		.active a {color:#000;}
+	}
+	.input-group {
+		border:none;
+		border-bottom: 1px solid #333;
+		.input-group-addon {background: transparent;border:none;opacity:.5;color:#000;}
+	}
+	input {border: none;
+		box-shadow: none;
+	}
+	.btn-primary {
+		background: transparent;
+		color: #333;
+		border-color: #333;
+		&:hover {background: #EEE;}
+	}
 }
 
 a {

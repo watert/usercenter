@@ -6,7 +6,7 @@ define ["backbone","models/user","bootstrap"],(Backbone,User)->
 
 			@user = new User
 			@user.on "login",()=>
-				@navigate "user/profile",replace:yes,trigger:yes
+				@navigate "user/profile",trigger:yes
 			console.debug @region
 		routes:
 			"user/":()->
@@ -55,15 +55,16 @@ define ["backbone","models/user","bootstrap"],(Backbone,User)->
 			<div class="container">
 				<div class="row">
 					<div class="col-sm-6 col-sm-offset-3">
-						<div class="well well-sm"> Welcome, <%=name%> </div>
-						<dl>
-							<dt>Email</dt>
-							<dd><%=email%></dd>
-						</dl>
-						<dl>
-							<dt>Brief</dt>
-							<dd><%=profile%></dd>
-						</dl>
+						<div class="text-center"> 
+							<h1 class="avatar">
+								<i class="fa fa-user"></i>
+							</h1>
+							<p><%=name%><br>
+								<small class="text-muted"> <%=email%></small>
+							</p>
+							<br>
+							<p><%=profile%></p>
+						</div>
 					</div>
 				</div>
 			</div>			
@@ -97,8 +98,7 @@ define ["backbone","models/user","bootstrap"],(Backbone,User)->
 				<div class="row">
 					<div class="col-sm-6 col-sm-offset-3">
 
-						<div class="panel panel-default">
-							<div class="panel-heading"> Common login </div>
+						<div class="panel panel-auth">
 							<div class="panel-body">
 								<ul class="nav nav-tabs">
 									<li class=""><a href="#login" data-toggle="tab">Login</a></li>
@@ -108,12 +108,20 @@ define ["backbone","models/user","bootstrap"],(Backbone,User)->
 									<div class="tab-pane" id="login">
 										<form action="login" class="form">
 											<div class="form-group">
-												<label>Email</label>
-												<input type="email" name="email" class="form-control">
+												<label class="input-group">
+													<span class="input-group-addon"> 
+														<i class="glyphicon glyphicon-envelope"></i>
+														Email </span>
+													<input type="email" name="email" class="form-control">
+												</label>
 											</div>
 											<div class="form-group">
-												<label>Password</label>
-												<input type="password" name="password" class="form-control">
+												<label class="input-group">
+													<span class="input-group-addon"> 
+														<i class="glyphicon glyphicon-asterisk"></i>
+														Password </span>
+													<input type="password" name="password" class="form-control">
+												</label>
 											</div>
 											<div class="form-actions">
 												<button class="btn btn-login btn-primary">Login</button>
@@ -123,18 +131,30 @@ define ["backbone","models/user","bootstrap"],(Backbone,User)->
 									<div class="tab-pane" id="signup">
 										<form action="login" class="form">
 											<div class="form-group">
-												<label>User</label>
-												<input type="text" name="user" class="form-control">
+												<label class="input-group">
+													<span class="input-group-addon"> 
+														<i class="glyphicon glyphicon-user"></i>
+														User </span>
+													<input type="text" name="user" class="form-control">
+												</label>
 											</div>
 											<div class="form-group">
-												<label>Email</label>
-												<input type="email" name="email" class="form-control">
+												<label class="input-group">
+													<span class="input-group-addon"> 
+														<i class="glyphicon glyphicon-envelope"></i>
+														Email </span>
+													<input type="email" name="email" class="form-control">
+												</label>
 											</div>
 											<div class="form-group">
-												<label>Password</label>
-												<input type="password" name="password" class="form-control">
+												<label class="input-group">
+													<span class="input-group-addon"> 
+														<i class="glyphicon glyphicon-asterisk"></i>
+														Password </span>
+													<input type="password" name="password" class="form-control">
+												</label>
 											</div>
-											<div class="form-actions">
+
 												<button class="btn btn-signup btn-primary">Sign Up</button>
 											</div>
 										</form>

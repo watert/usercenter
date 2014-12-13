@@ -37,7 +37,7 @@ define ["backbone","models/user","bootstrap"],(Backbone,User)->
 				<div class="row">
 					<div class="col-sm-6 col-sm-offset-3">
 
-						<div class="panel panel-default">
+						<div class="panel panel-auth">
 							<div class="panel-heading"> Common login </div>
 							<div class="panel-body">
 								<ul class="nav nav-tabs">
