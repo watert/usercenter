@@ -8,5 +8,4 @@ define ["jquery","backbone"],()->
 		render:()->
 			@trigger("render")
 			@onRender?()
-
 	return Util

@@ -6,6 +6,8 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var coffeeMiddleware = require('coffee-middleware')
 
+require('coffee-script/register')
+
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
@@ -29,7 +31,10 @@ app.use(coffeeMiddleware({
 
 
 app.use('/', routes);
-app.use('/users', users);
+app.use('/api/user', require("./routes/user"));
+app.get('/user/*', function(req,res){
+    res.render('index');
+});
 
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
