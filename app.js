@@ -1,61 +1,71 @@
+var express = require('express');
+var path = require('path');
+var favicon = require('static-favicon');
+var logger = require('morgan');
+var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
+var coffeeMiddleware = require('coffee-middleware')
 
-/**
- * Module dependencies.
- */
-require("coffee-script/register");
-var express = require('express')
-  , routes = require('./routes')
-  , user = require('./routes/user')
-  , http = require('http')
-  , path = require('path')
-  , mongoose = require("mongoose");
+require('coffee-script/register')
+
+var routes = require('./routes/index');
+var users = require('./routes/users');
 
 var app = express();
-mongoose.connect("localhost");
-// all environments
-app.set('port', process.env.PORT || 3000);
-app.set('views', __dirname + '/views');
-app.set('view engine', 'jade');
-// app.set('view cache', false);
-app.use(express.favicon());
-app.use(express.logger('dev'));
-app.use(express.bodyParser());
-app.use(express.cookieParser('some secret'));
-app.use(express.cookieSession());
-app.use(express.methodOverride());
-app.use(app.router);
-app.use(express.static(path.join(__dirname, 'public')));
 
-// development only
-if ('development' == app.get('env')) {
-  app.use(express.errorHandler());
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
+
+app.use(favicon());
+app.use(logger('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded());
+app.use(cookieParser());
+app.use(require('less-middleware')(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
+// app.use("/public",express.static(path.join(__dirname, 'public')));
+app.use(coffeeMiddleware({
+    src: __dirname + '/public'
+}));
+
+
+app.use('/', routes);
+app.use('/api/user', require("./routes/user"));
+app.get('/user/*', function(req,res){
+    res.render('index');
+});
+
+/// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+    var err = new Error('Not Found');
+    err.status = 404;
+    next(err);
+});
+
+/// error handlers
+
+// development error handler
+// will print stacktrace
+if (app.get('env') === 'development') {
+    app.use(function(err, req, res, next) {
+        res.status(err.status || 500);
+        res.render('error', {
+            message: err.message,
+            error: err
+        });
+    });
 }
 
-// Basic User Functions
-userRoute = require('./routes/user');
-userRoute.init(app);
-// Portal
-app.get('/', function(req,res){ 
-	user = userRoute.userByReq(req);
-	if(!user)res.render("index"); 
-	else res.redirect("/user/profile");
+// production error handler
+// no stacktraces leaked to user
+app.use(function(err, req, res, next) {
+    res.status(err.status || 500);
+    res.render('error', {
+        message: err.message,
+        error: {}
+    });
 });
 
 
-// User Management
-app.get('/admin', function(req,res){ res.render("admin"); });
-
-//SSO part
-require("./routes/sso").init(app,"/sso");
-
-app.all("/test/*",require("./routes/test").all);
-var ssoRouter = require("./src_clients/UserCenterClient")
-			.expressRouter({host:"waterwu.me:3003"});
-app.get("/ssotest",ssoRouter);
-app.get("/ssotest",function(req,res){
-	res.json("hello,"+req.session.user.name);
-});
-
-http.createServer(app).listen(app.get('port'), function(){
-  console.log('Express server listening on port ' + app.get('port'));
-});
+module.exports = app;
