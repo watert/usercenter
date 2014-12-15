@@ -14,6 +14,7 @@ require(["routers/user"],function(UserRouter){
 	var userRouter = new UserRouter({el:$("#main")[0]});
 	Backbone.history.start(pushState: true);
 });
+```
 
 ## 后端接口要求：
 
