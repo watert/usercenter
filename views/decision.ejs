@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <base href="<%=baseUrl%>/">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="public/css/base.css">
+    <script src="public/bundle.js"> </script>
+    <script>
+        // App.init();
+    </script>
+</head>
+<body>
+    <form method="POST" action="oauth/authorize/decision">
+        <input type="hidden" name="transaction_id" value="<%=transactionID%>">
+        sure to grant?
+        <button type="submit"> Grant </button>
+    </form>
+</body>
+</html>

@@ -1,4 +1,4 @@
-require 'coffee-script/register'
+require('coffee-script/register')
 _ = require("underscore")
 express = require("express")
 q = require("q")
@@ -7,7 +7,6 @@ ejs = require("ejs")
 path = require("path")
 fs = require('fs')
 crypto = require("crypto")
-oauth2orize = require("oauth2orize")
 
 md5 = (_str)->
     crypto.createHash('md5').update(_str).digest('hex')
@@ -23,10 +22,13 @@ renderPage = (req,res)->
     html = renderTemplate("views/indexview.ejs",data)
     res.type("html").send(html)
 
+# middleware entrance
 Auth = (options)->
     router = express.Router()
 
 
+
+    # UI entrance
     router.get "/user",(req,res)->
         res.json "/user"
     router.use("/public",express.static(path.join(__dirname, './public')));
@@ -35,9 +37,11 @@ Auth = (options)->
         res.type("html").send(html)
     router.get("/page", renderPage)
     router.get("/", renderPage)
+    router.get("/profile", renderPage)
+    router.get("/login", renderPage)
 
 
-    router.use "/api", (req,res,next)->
+    apiUtils = (req,res,next)->
         res.retFail = (err)->
             res.status(err.error.code).json(err)
         res.ret = (ret)->
@@ -46,38 +50,55 @@ Auth = (options)->
         res.retPromise = (promise)->
             promise.then(res.ret).fail(res.retFail)
         next()
+    # router.use "/api", apiUtils
+    router.use(apiUtils)
 
-    # Auth
-    passport = require("passport")
-    LocalStrategy = require("passport-local").Strategy
-    router.use(passport.initialize());
-    router.use(passport.session());
-    passport.serializeUser (user, done)->
-        done(null, user.id)
-    passport.deserializeUser (id, done)->
-        User.findByID(id).then (user)->
-            done(null, user)
-        .fail (err)->
-            done(err.message)
-
-    passport.use(new LocalStrategy({
-        usernameField:"name"
-    },(name, password, done)->
-        User.login({name, password}).then (user)->
-            done(null, user)
-        .fail(done)
-    ))
-    router.post "/api/login",
-        passport.authenticate('local'),
-        (req,res)->
-            res.ret(req.user)
+    require("./routes/auth.coffee")(router)
 
     # APIs with session auth
-    sessionAuth = passport.authenticate('local')
+    #
+    # sessionAuth = passport.authenticate('local')
     checkAuth = (req,res,next)->
         if not req.user
-            res.retFail({error:{message:"not authorized",code:"406"}})
-        next()
+            url = req.protocol+"://"+req.get("host")+req.originalUrl;
+            url = encodeURIComponent(url)
+            res.redirect("/?redirect=#{url}")
+        else
+            next()
+
+    passport = require("passport")
+
+    # OAuth server
+    oauthserver = require("./oauthserver.coffee")
+    # app.get "/oauth/authorize/", (req,res)->
+    #     res.json(req.user)
+    # app.get "/api/xxx/", checkAuth, (req,res)->
+    #     res.json(req.user)
+    app.get "/oauth/authorize", checkAuth, oauthserver.authorize, (req,res)->
+        data = transactionID: req.oauth2.transactionID, user:req.user._data, baseUrl: req.baseUrl
+        res.type("html").send renderTemplate("views/decision.ejs", data)
+    app.post "/oauth/authorize/decision", checkAuth, oauthserver.server.decision()
+
+    app.post("/oauth/token", oauthserver.server.token(), oauthserver.server.errorHandler())
+    app.post("/oauth/token/", oauthserver.server.token(), oauthserver.server.errorHandler())
+
+    # OAuth client
+    OAuth2Strategy = require("passport-oauth2")
+    passport.use(new OAuth2Strategy({
+        authorizationURL:"http://localhost:3000/oauth/authorize"
+        tokenURL: 'http://localhost:3000/oauth/token'
+        clientID:"EXAMPLE CLIENT ID"
+        clientSecret:"EXAMPLE CLIENT SECRET"
+        callbackURL: "/client/"
+    },(accessToken, refreshToken, profile, done)->
+        # console.log "oauth2 passed", accessToken, profile
+        done(null,profile)
+    ));
+    router.get "/client",passport.authenticate('oauth2'), (req,res)->
+        # console.log "authorized oauth2", req.oauth2
+        res.json({"page":"client", user:req.user})
+
+    # API for profile
     router.delete "/api/", checkAuth, (req,res)->
         req.user.remove().then((ret)-> {_data:ret})
             .then (ret)->
@@ -85,6 +106,7 @@ Auth = (options)->
                 res.ret(ret)
     router.get "/api/", checkAuth, (req,res)->
         # console.log "GET /api", req.user
+        # console.log "get /api/",req.user
         hash = md5(req.user.get("email"))
         req.user.set({"emailHash": hash})
         res.ret(req.user)
@@ -109,8 +131,14 @@ if require.main is module
     module.exports = server
     app.use(bodyParser.json())
     app.use(bodyParser.urlencoded({ extended: false }))
+
     app.use(require('compression')());
-    app.use(session({secret:"auth",resave:true, saveUninitialized:false}));
+    app.use(require('cookie-parser')())
+    app.use(session({secret:"auth"}));
+    passport = require("passport")
+    app.use(passport.initialize());
+    app.use(passport.session());
+
     app.use(require('morgan')('dev'));
     app.use("/",Auth())
     server = app.listen(3000)

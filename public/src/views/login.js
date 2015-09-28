@@ -22,16 +22,6 @@ LoginView = (function(superClass) {
       return App.router.navigate("register", {
         trigger: true
       });
-    },
-    "submit": function(e) {
-      var data;
-      e.preventDefault();
-      data = deparam(this.$("form").serialize());
-      return User.login(data).then(function() {
-        return App.router.navigate("profile", {
-          trigger: true
-        });
-      });
     }
   };
 
@@ -39,17 +29,19 @@ LoginView = (function(superClass) {
     return this.name = "title";
   };
 
-  LoginView.prototype.tmpl = _.template("<form method=\"post\" data-action=\"login\" class=\"form form-login\">\n    <h2> User Login </h2>\n    <input type=\"text\" name=\"name\" placeholder=\"Name\"/>\n    <input type=\"password\" name=\"password\" placeholder=\"Password\"/>\n    <div class=\"actions\">\n        <button class=\"btn btn-submit\" type=\"submit\">Login</button>\n        <button class=\"btn btn-register\" type=\"button\">Register</button>\n    </div>\n</form>");
+  LoginView.prototype.tmpl = _.template("<form method=\"post\" action=\"login\" class=\"form form-login\">\n    <h2> User Login </h2>\n    <input type=\"hidden\" name=\"redirect\" value=\"\" />\n    <input type=\"text\" value=\"test\" name=\"name\" placeholder=\"Name\"/>\n    <input type=\"password\" value=\"test\" name=\"password\" placeholder=\"Password\"/>\n    <div class=\"actions\">\n        <button class=\"btn btn-submit\" type=\"submit\">Login</button>\n        <button class=\"btn btn-register\" type=\"button\">Register</button>\n    </div>\n</form>");
 
   LoginView.prototype.className = "view-user-index";
 
   LoginView.prototype.render = function(data) {
-    var html;
+    var html, query;
     if (data == null) {
       data = {};
     }
     html = this.tmpl(data);
-    return this.$el.html(html);
+    this.$el.html(html);
+    query = $.deparam(location.search.slice(1));
+    return this.$("[name=redirect]").val(query.redirect);
   };
 
   return LoginView;

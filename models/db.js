@@ -117,6 +117,9 @@ BaseDoc = (function() {
   BaseDoc.store = "test";
 
   function BaseDoc(data, val) {
+    if (!data) {
+      data = {};
+    }
     if (val) {
       data = {
         data: val
@@ -251,7 +254,11 @@ BaseDoc = (function() {
     args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
     DocClass = this;
     return this.getStore().then(function(store) {
+      console.log.apply(console, ["db findOne args"].concat(slice.call(args)));
       return store.findOne.apply(store, args).then(function(data) {
+        if (!data) {
+          q.reject("document not found");
+        }
         return new DocClass(data);
       });
     });

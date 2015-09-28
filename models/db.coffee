@@ -55,6 +55,7 @@ DBStore.getStore = (name)->
 class BaseDoc
     @store: "test"
     constructor: (data,val)->
+        if not data then data = {}
         if val then data = {data:val}
         @_data = _.extend({},data)
         @changed = yes
@@ -114,7 +115,10 @@ class BaseDoc
     @findOne:(args...)->
         DocClass = this
         @getStore().then (store)->
-            store.findOne(args...).then (data)-> new DocClass(data)
+            console.log "db findOne args",args...
+            store.findOne(args...).then (data)->
+                if not data then q.reject("document not found")
+                new DocClass(data)
     @find:(where={}, args...)->
         @getStore().then (store)->
             act = store.find(where, args...)

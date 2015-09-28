@@ -23,6 +23,9 @@ let Router = Backbone.Router.extend({
     routes: {
         "*viewName":function(viewName){
             viewName = viewName||"login"
+            if (viewName.slice(-1) == "/"){
+                viewName = viewName.slice(0,-1)
+            }
             this.loadView(viewName)
         }
     },
@@ -41,7 +44,7 @@ let Router = Backbone.Router.extend({
 let init = (options)=> {
     App.router = new Router()
     $(()=>{
-        Backbone.history.start({root:$("base").attr("href")})
+        Backbone.history.start({root:$("base").attr("href"), pushState:true})
         // let LoginView = require("./views/login.coffee")
         // let view = new LoginView()
         // view.render();
