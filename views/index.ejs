@@ -1,29 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<title>Usercenter</title>
-	<base href="/">
-	<% include _header.ejs %>
-	<script>
-	</script>
-</head>
-<body class="auth">
-	<div class="navbar navbar-default navbar-static-top">
-		<div class="navbar-inner">
-			<div class="container">
-				<div class="navbar-brand">Opensource Login</div>
-			</div>
-		</div>
-	</div>
-
-	<div id="main">
-		
-	</div>
-	<div class="footer text-center text-muted">
-		
-		<hr>
-		by @watert
-	</div>
-</body>
+<html>
+  <head>
+    <base href="<%=baseUrl%>/">
+    <title>Mocha</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="public/test/mocha.css" />
+  </head>
+  <body>
+    <div id="mocha"></div>
+    <script src="public/test/mocha.js"></script>
+    <script>mocha.setup('bdd');</script>
+    <script src="public/bundle.js"></script>
+    <script src="public/test/tests.js"></script>
+    <script>
+      mocha.run();
+    </script>
+  </body>
 </html>

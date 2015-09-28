@@ -1,35 +1,29 @@
-{assert} = chai
-describe "Framework test",->
-	it "should assert ok", ()->
-		assert.ok(yes,"yes is ok")
-describe "User Basic Actions JS API", ()->
-	User = null
-	testData = {name:"_testusername",password:"_testpass",email:"_test@email.com"}
-	# 初始化用户模块
-	before (done)=>
-		require ["models/user"],(_User)-> 
-			User = _User 
-			done()
-
-	it "should register", ()->
-		(new User).signUp(data:testData).then (user)=>
-			assert.equal(user.get("name"), testData.name)
-		
-	it "should login", ()->
-		loginData = _.pick(testData,"email","password")
-		(new User).login(data:testData).done (user)=>
-			assert.equal(user.get("name"), testData.name)
-	it "should get info if is logined", ()->
-		(new User).login(data:testData).done (user)=>
-			assert.equal(User.getCurrentUser().get("name"),testData.name)
-	it "should request info if is logined", ()->
-		user = (new User)
-		user.fetch().then ->
-			assert.equal user.get("name"),testData.name
-	it "should signOut",()->
-		(new User).signOut()
-	it "should login fail auth", (done)->
-		loginData = _.pick(testData,"email") # lack of password
-		(new User).login(data:testData).fail (data)=>
-			assert.equal(data.msg, "auth fail")
-			done()
+# assert = console.assert.bind(console)
+assert = (val, msg)->
+    if not val then throw("Err:"+msg)
+{User} = App
+describe "User Actions", ->
+    userData = {name:"xxxx1", email:"xx@asd.com", password:"xxx"}
+    it "should has user module", ->
+        console.log User
+        assert(App.User)
+    it "should register", ->
+        User.register(userData).then (user)->
+            assert(user.id, "register")
+    it "should login", ->
+        User.login(userData).then (user)->
+            assert(user.id, "login fail")
+    it "should logout", ->
+        User.post("logout")
+    it "should get profile", ->
+        User.login(userData).then ->
+            User.profile().then (user)->
+                assert(user.id, "login fail")
+                assert(user.get("emailHash"), "has email hash")
+    it "should update profile", ->
+        User.profile().then (user)->
+            user.save({name:"xxxx2"}).then ->
+                assert(user.get("name") == "xxxx2", "update name")
+    it "should remove user", ->
+        User.profile().then (user)->
+            user.destroy()
