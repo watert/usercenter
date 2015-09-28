@@ -5,13 +5,11 @@ initWithRouter = (router)->
     passport = require("passport")
     LocalStrategy = require("passport-local").Strategy
     passport.serializeUser (user, done)->
-        # console.log "serializeUser", user
+        console.log "passport.serializeUser", user
         if not user?.id then done("no user")
         done(null, user.id)
     passport.deserializeUser (id, done)->
-        # console.log "deserializeUser", id
         User.findByID(id).then (user)->
-            # console.log user
             done(null, user)
         .fail (err)->
             done(err.message)

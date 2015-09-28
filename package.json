@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "forever": "forever -w index.coffee -c coffee",
+    "forever": "forever -w -c coffee index.coffee",
     "watch": "webpack -w",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -33,7 +33,9 @@
     "nedb": "^1.2.0",
     "oauth2orize": "^1.0.1",
     "passport": "^0.3.0",
+    "passport-http": "^0.3.0",
     "passport-local": "^1.0.0",
+    "passport-oauth2-client-password": "^0.1.2",
     "q": "^1.4.1",
     "underscore": "^1.8.3"
   }

@@ -1,4 +1,7 @@
 oauth2orize = require("oauth2orize")
+User = require("./models/user.coffee")
+q = require("q")
+_ = require("underscore")
 class AccessToken extends require("./models/db.coffee").BaseDoc
     @store: "oauth_access_token"
 class GrantCode extends require("./models/db.coffee").BaseDoc
@@ -21,33 +24,53 @@ server.deserializeClient (id, done)->
 
 grantCodeMethod = (client, redirectURI, user, ares, done)->
     code = utils.uid();
-    console.log "grant code", code
-    # ac = GrantCode.save({code, user_id:user._id, redirectURI, client_id:client._id}).then ->
-    ac = new GrantCode({code, user_id:user._id, redirectURI, client_id:client._id})
+    ac = new GrantCode({code, user_id:user.id, redirectURI, client_id:commonClient.id})
     ac.save().then (doc)->
-        console.log "successfully generate grant code", code
         done(null, code)
     .fail (err)-> done(err)
 exchangeTokenMethod = (client, code, redirectURI, done)->
-    console.log "exchangeTokenMethod",client, code
     GrantCode.findOne({code}).then (doc)->
+        console.log "find grantCode by code",code, doc
         grantDoc = doc._data
-        if not grantDoc then return done("no grant authcode founded", false)
-        if client.id isnt grantDoc.client_id then return done("client_id wrong",false)
-        if redirectURI isnt grantDoc.redirectURI then return done("redirectURI wrong", false)
-        tokenData =
-            token: utils.uid()+utils.uid()+utils.uid()+utils.uid()
-            client_id: grantDoc.client_id
-            user_id: grantDoc.user_id
+        user_id = grantDoc.user_id
+        if not doc.id
+            done(null, false, "authcode #{code} not found")
+            return q.reject("authcode #{code} not found")
+        else
+            tokenData =
+                token: utils.uid()+utils.uid()+utils.uid()+utils.uid()
+                client_id: grantDoc.client_id
+                profile: {name:"hello"}
+                user_id: user_id
+            # console.log "try withwith tokenData", tokenData
+            return tokenData
+    .then (tokenData)->
         GrantCode.remove({code}).then ->
-            token = utils.uid()+utils.uid()+utils.uid()+utils.uid()
             (new AccessToken(tokenData)).save()
-        .then (tokenDoc)->
-            done(null, tokenDoc._data)
-        .fail -> done("delete grantcode and save token err")
+    .then (tokenDoc)->
+        # console.log "done with token", tokenDoc._data.token
+        data = tokenDoc._data
+        return _.pick(tokenDoc._data, "token", "user_id")
+    .then (data)->
+        console.log "User.findByID", data
+        User.findByID(data.user_id).then (userDoc)->
+            data.profile = _.omit(userDoc._data,"password")
+            console.log "find user",data
+            done(null, data)
+    .fail (err)->
+        console.log("fail err",err)
+        done("exchangeToken err")
 
 server.grant(oauth2orize.grant.code(grantCodeMethod))
 server.exchange(oauth2orize.exchange.code(exchangeTokenMethod))
+
+passport = require("passport")
+BasicStrategy = require("passport-http").BasicStrategy
+ClientPasswordStrategy = require('passport-oauth2-client-password').Strategy
+passport.use new BasicStrategy (username, password, done)->
+    done(null,commonClient)
+passport.use new ClientPasswordStrategy (clientID, clientSecret, done)->
+    done(null,commonClient)
 
 
 authorize = server.authorize (clientID, redirectURI, done)->

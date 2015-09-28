@@ -7,6 +7,7 @@ initWithRouter = function(router) {
   passport = require("passport");
   LocalStrategy = require("passport-local").Strategy;
   passport.serializeUser(function(user, done) {
+    console.log("passport.serializeUser", user);
     if (!(user != null ? user.id : void 0)) {
       done("no user");
     }

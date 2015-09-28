@@ -1,8 +1,14 @@
-var AccessToken, Clients, GrantCode, authorize, commonClient, exchangeTokenMethod, grantCodeMethod, oauth2orize, server, utils,
+var AccessToken, BasicStrategy, ClientPasswordStrategy, Clients, GrantCode, User, _, authorize, commonClient, exchangeTokenMethod, grantCodeMethod, oauth2orize, passport, q, server, utils,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
 
 oauth2orize = require("oauth2orize");
+
+User = require("./models/user.coffee");
+
+q = require("q");
+
+_ = require("underscore");
 
 AccessToken = (function(superClass) {
   extend(AccessToken, superClass);
@@ -67,15 +73,13 @@ server.deserializeClient(function(id, done) {
 grantCodeMethod = function(client, redirectURI, user, ares, done) {
   var ac, code;
   code = utils.uid();
-  console.log("grant code", code);
   ac = new GrantCode({
     code: code,
-    user_id: user._id,
+    user_id: user.id,
     redirectURI: redirectURI,
-    client_id: client._id
+    client_id: commonClient.id
   });
   return ac.save().then(function(doc) {
-    console.log("successfully generate grant code", code);
     return done(null, code);
   }).fail(function(err) {
     return done(err);
@@ -83,43 +87,67 @@ grantCodeMethod = function(client, redirectURI, user, ares, done) {
 };
 
 exchangeTokenMethod = function(client, code, redirectURI, done) {
-  console.log("exchangeTokenMethod", client, code);
   return GrantCode.findOne({
     code: code
   }).then(function(doc) {
-    var grantDoc, tokenData;
+    var grantDoc, tokenData, user_id;
+    console.log("find grantCode by code", code, doc);
     grantDoc = doc._data;
-    if (!grantDoc) {
-      return done("no grant authcode founded", false);
+    user_id = grantDoc.user_id;
+    if (!doc.id) {
+      done(null, false, "authcode " + code + " not found");
+      return q.reject("authcode " + code + " not found");
+    } else {
+      tokenData = {
+        token: utils.uid() + utils.uid() + utils.uid() + utils.uid(),
+        client_id: grantDoc.client_id,
+        profile: {
+          name: "hello"
+        },
+        user_id: user_id
+      };
+      return tokenData;
     }
-    if (client.id !== grantDoc.client_id) {
-      return done("client_id wrong", false);
-    }
-    if (redirectURI !== grantDoc.redirectURI) {
-      return done("redirectURI wrong", false);
-    }
-    tokenData = {
-      token: utils.uid() + utils.uid() + utils.uid() + utils.uid(),
-      client_id: grantDoc.client_id,
-      user_id: grantDoc.user_id
-    };
+  }).then(function(tokenData) {
     return GrantCode.remove({
       code: code
     }).then(function() {
-      var token;
-      token = utils.uid() + utils.uid() + utils.uid() + utils.uid();
       return (new AccessToken(tokenData)).save();
-    }).then(function(tokenDoc) {
-      return done(null, tokenDoc._data);
-    }).fail(function() {
-      return done("delete grantcode and save token err");
     });
+  }).then(function(tokenDoc) {
+    var data;
+    data = tokenDoc._data;
+    return _.pick(tokenDoc._data, "token", "user_id");
+  }).then(function(data) {
+    console.log("User.findByID", data);
+    return User.findByID(data.user_id).then(function(userDoc) {
+      data.profile = _.omit(userDoc._data, "password");
+      console.log("find user", data);
+      return done(null, data);
+    });
+  }).fail(function(err) {
+    console.log("fail err", err);
+    return done("exchangeToken err");
   });
 };
 
 server.grant(oauth2orize.grant.code(grantCodeMethod));
 
 server.exchange(oauth2orize.exchange.code(exchangeTokenMethod));
+
+passport = require("passport");
+
+BasicStrategy = require("passport-http").BasicStrategy;
+
+ClientPasswordStrategy = require('passport-oauth2-client-password').Strategy;
+
+passport.use(new BasicStrategy(function(username, password, done) {
+  return done(null, commonClient);
+}));
+
+passport.use(new ClientPasswordStrategy(function(clientID, clientSecret, done) {
+  return done(null, commonClient);
+}));
 
 authorize = server.authorize(function(clientID, redirectURI, done) {
   console.log("server.authorize", clientID, redirectURI);
