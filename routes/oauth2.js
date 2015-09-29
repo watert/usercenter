@@ -91,7 +91,6 @@ exchangeTokenMethod = function(client, code, redirectURI, done) {
     code: code
   }).then(function(doc) {
     var grantDoc, tokenData, user_id;
-    console.log("find grantCode by code", code, doc);
     grantDoc = doc._data;
     user_id = grantDoc.user_id;
     if (!doc.id) {
@@ -119,14 +118,11 @@ exchangeTokenMethod = function(client, code, redirectURI, done) {
     data = tokenDoc._data;
     return _.pick(tokenDoc._data, "token", "user_id");
   }).then(function(data) {
-    console.log("User.findByID", data);
     return User.findByID(data.user_id).then(function(userDoc) {
       data.profile = _.omit(userDoc._data, "password");
-      console.log("find user", data);
       return done(null, data);
     });
   }).fail(function(err) {
-    console.log("fail err", err);
     return done("exchangeToken err");
   });
 };
@@ -137,7 +133,7 @@ commonClient = {
 };
 
 middleware = function(options) {
-  var BasicStrategy, ClientPasswordStrategy, authorize, decisionAuthCheck, passport, router, server;
+  var BasicStrategy, ClientPasswordStrategy, authorize, clients, decisionAuthCheck, passport, router, server;
   passport = require("passport");
   BasicStrategy = require("passport-http").BasicStrategy;
   ClientPasswordStrategy = require('passport-oauth2-client-password').Strategy;
@@ -145,31 +141,38 @@ middleware = function(options) {
     return done(null, commonClient);
   }));
   passport.use(new ClientPasswordStrategy(function(clientID, clientSecret, done) {
+    console.log("ClientPasswordStrategy", clientID, clientSecret);
     return done(null, commonClient);
   }));
   server = oauth2orize.createServer();
+  clients = {};
   server.serializeClient(function(client, done) {
     console.log("serialize client", client, commonClient.id);
-    return done(null, commonClient.id);
+    clients[client.clientID] = client;
+    return done(null, client.clientID);
   });
   server.deserializeClient(function(id, done) {
     console.log("deserialize client", id);
-    return done(null, commonClient);
+    return done(null, clients[id] || commonClient);
   });
   server.grant(oauth2orize.grant.code(grantCodeMethod));
   server.exchange(oauth2orize.exchange.code(exchangeTokenMethod));
   authorize = server.authorize(function(clientID, redirectURI, done) {
     console.log("server.authorize", clientID, redirectURI);
-    return done(null, commonClient, redirectURI);
+    return done(null, {
+      clientID: clientID,
+      redirectURI: redirectURI
+    }, redirectURI);
   });
   router = express.Router();
   router.get("/authorize", checkAuth, authorize, function(req, res) {
     var data;
-    data = {
-      transactionID: req.oauth2.transactionID,
+    console.log("/authorize", req.oauth2);
+    data = _.pick(req.oauth2, "transactionID", "client");
+    data = _.extend(data, {
       user: req.user._data,
       baseUrl: req.baseUrl
-    };
+    });
     return res.type("html").send(renderTemplate("../views/decision.ejs", data));
   });
   decisionAuthCheck = function(req, res, next) {

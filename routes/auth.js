@@ -7,7 +7,6 @@ initWithRouter = function(router) {
   passport = require("passport");
   LocalStrategy = require("passport-local").Strategy;
   passport.serializeUser(function(user, done) {
-    console.log("passport.serializeUser", user);
     if (!(user != null ? user.id : void 0)) {
       done("no user");
     }
@@ -32,7 +31,7 @@ initWithRouter = function(router) {
   }));
   router.post("/login", passport.authenticate('local'), function(req, res) {
     var redirectURI;
-    redirectURI = req.body.redirect || "/profile";
+    redirectURI = req.body.redirect || (req.baseUrl + "/profile");
     return res.redirect(redirectURI);
   });
   return router.post("/api/login", passport.authenticate('local'), function(req, res) {

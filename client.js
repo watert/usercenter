@@ -1,4 +1,4 @@
-var OAuth2Strategy, app, bodyParser, checkAuth, express, passport, request, server, serverHost, session;
+var OAuth2Strategy, app, bodyParser, checkAuth, express, passport, request, server, serverBase, session, users;
 
 express = require("express");
 
@@ -8,31 +8,32 @@ OAuth2Strategy = require("passport-oauth2");
 
 request = require("request");
 
-serverHost = "http://localhost:3000";
+serverBase = "http://localhost:3000/oauth";
 
 passport.use(new OAuth2Strategy({
-  authorizationURL: serverHost + "/oauth/authorize",
-  tokenURL: serverHost + "/oauth/token",
+  authorizationURL: serverBase + "/authorize",
+  tokenURL: serverBase + "/token",
   clientID: "EXAMPLE CLIENT ID",
   clientSecret: "EXAMPLE CLIENT SECRET",
-  callbackURL: "/client/login/"
+  callbackURL: "/client/"
 }, function(accessToken, refreshToken, profile, done) {
   console.log("oauth2 passed", accessToken, profile);
   return done(null, accessToken);
 }));
+
+users = {};
 
 passport.serializeUser(function(user, done) {
   console.log("passport.serializeUser", user);
   if (!user.token) {
     done("no user");
   }
+  users[user.token] = user;
   return done(null, user.token);
 });
 
 passport.deserializeUser(function(id, done) {
-  return done(null, {
-    token: id
-  });
+  return done(null, users[id]);
 });
 
 bodyParser = require('body-parser');
@@ -77,6 +78,7 @@ checkAuth = function(req, res, next) {
   if (!req.user) {
     return passport.authenticate('oauth2')(req, res, next);
   } else {
+    console.log("setsession", req.user);
     session.user = req.user;
     return next();
   }
@@ -88,6 +90,8 @@ app.get("/client/login", checkAuth, function(req, res) {
 
 app.get("/logout", function(req, res) {
   req.logOut();
+  console.log(req.session);
+  req.session.destroy();
   return res.json("logout");
 });
 

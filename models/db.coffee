@@ -115,7 +115,6 @@ class BaseDoc
     @findOne:(args...)->
         DocClass = this
         @getStore().then (store)->
-            console.log "db findOne args",args...
             store.findOne(args...).then (data)->
                 if not data then q.reject("document not found")
                 new DocClass(data)

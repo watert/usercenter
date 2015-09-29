@@ -23,10 +23,15 @@ md5 = function(_str) {
 };
 
 IndexRoute = function(options) {
-  var OAuth, apiUtils, checkAuth, router;
+  var OAuth, apiUtils, app, checkAuth, router;
+  if (options == null) {
+    options = {};
+  }
   router = express.Router();
-  router.use(passport.initialize());
-  router.use(passport.session());
+  app = options.app || router;
+  console.log(options);
+  app.use(passport.initialize());
+  app.use(passport.session());
   router.get("/user", function(req, res) {
     return res.json("/user");
   });

@@ -6,7 +6,6 @@ q = require("q")
 
 # middleware entrance
 MainRoute = require("./routes/index.coffee")
-
 module.exports = MainRoute
 
 ### run directly, run as root router ###

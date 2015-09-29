@@ -5,7 +5,6 @@ initWithRouter = (router)->
     passport = require("passport")
     LocalStrategy = require("passport-local").Strategy
     passport.serializeUser (user, done)->
-        console.log "passport.serializeUser", user
         if not user?.id then done("no user")
         done(null, user.id)
     passport.deserializeUser (id, done)->
@@ -25,9 +24,7 @@ initWithRouter = (router)->
     router.post "/login",
         passport.authenticate('local'),
         (req,res)->
-            # logIn automatically invoked by authenticate
-            # req.logIn req.user,()->
-            redirectURI = req.body.redirect or "/profile"
+            redirectURI = req.body.redirect or "#{req.baseUrl}/profile"
             res.redirect(redirectURI)
     router.post "/api/login",
         passport.authenticate('local'),

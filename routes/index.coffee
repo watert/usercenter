@@ -12,11 +12,13 @@ md5 = (_str)->
     crypto.createHash('md5').update(_str).digest('hex')
 
 
-IndexRoute = (options)->
+IndexRoute = (options={})->
     router = express.Router()
 
-    router.use(passport.initialize())
-    router.use(passport.session())
+    app = options.app or router
+    console.log options
+    app.use(passport.initialize())
+    app.use(passport.session())
 
 
     # UI entrance
@@ -50,34 +52,11 @@ IndexRoute = (options)->
 
     require("./auth.coffee")(router)
 
-    # APIs with session auth
-    #
-    # sessionAuth = passport.authenticate('local')
-    #
-    # checkAuth = (req,res,next)->
-    #     if not req.user
-    #         console.log "not user"
-    #         url = encodeURIComponent(req.getFullUrl())
-    #         res.redirect("/?redirect=#{url}")
-    #     else
-    #         next()
-
 
     # OAuth server
     OAuth = require("./oauth2.coffee")
     checkAuth = OAuth.checkAuth
     router.use("/oauth", OAuth())
-    # oauthserver = require("../oauthserver.coffee")
-    # router.get "/oauth/authorize", checkAuth, oauthserver.authorize, (req,res)->
-    #     data = transactionID: req.oauth2.transactionID, user:req.user._data, baseUrl: req.baseUrl
-    #     res.type("html").send renderTemplate("../views/decision.ejs", data)
-    # decisionAuthCheck = (req,res,next)->
-    #     if not req.user
-    #         url = encodeURIComponent(req.getFullUrl())
-    #         res.retFail("Not logined")
-    #     else next()
-    # router.post "/oauth/authorize/decision",decisionAuthCheck,oauthserver.server.decision()
-    # router.post("/oauth/token", oauthserver.server.token(), oauthserver.server.errorHandler())
 
     # API for profile
     router.delete "/api/", checkAuth, (req,res)->

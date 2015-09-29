@@ -31,7 +31,6 @@ grantCodeMethod = (client, redirectURI, user, ares, done)->
     .fail (err)-> done(err)
 exchangeTokenMethod = (client, code, redirectURI, done)->
     GrantCode.findOne({code}).then (doc)->
-        console.log "find grantCode by code",code, doc
         grantDoc = doc._data
         user_id = grantDoc.user_id
         if not doc.id
@@ -53,13 +52,10 @@ exchangeTokenMethod = (client, code, redirectURI, done)->
         data = tokenDoc._data
         return _.pick(tokenDoc._data, "token", "user_id")
     .then (data)->
-        console.log "User.findByID", data
         User.findByID(data.user_id).then (userDoc)->
             data.profile = _.omit(userDoc._data,"password")
-            console.log "find user",data
             done(null, data)
     .fail (err)->
-        console.log("fail err",err)
         done("exchangeToken err")
 
 commonClient = {id:'-1', type:"unknown"}
@@ -72,26 +68,33 @@ middleware = (options)->
     passport.use new BasicStrategy (username, password, done)->
         done(null,commonClient)
     passport.use new ClientPasswordStrategy (clientID, clientSecret, done)->
+        console.log "ClientPasswordStrategy", clientID, clientSecret
         done(null,commonClient)
 
     server = oauth2orize.createServer()
 
+    clients = {}
     server.serializeClient (client, done)->
         console.log "serialize client",client,commonClient.id
-        done(null, commonClient.id)
+        clients[client.clientID] = client
+        done(null, client.clientID)
     server.deserializeClient (id, done)->
+
         console.log "deserialize client",id
-        done(null, commonClient)
+        done(null, clients[id] or commonClient)
 
     server.grant(oauth2orize.grant.code(grantCodeMethod))
     server.exchange(oauth2orize.exchange.code(exchangeTokenMethod))
 
     authorize = server.authorize (clientID, redirectURI, done)->
+
         console.log "server.authorize", clientID, redirectURI
-        done(null, commonClient, redirectURI)
+        done(null,{clientID, redirectURI}, redirectURI)
     router = express.Router()
     router.get "/authorize", checkAuth, authorize, (req,res)->
-        data = transactionID: req.oauth2.transactionID, user:req.user._data, baseUrl: req.baseUrl
+        console.log "/authorize", req.oauth2
+        data = _.pick(req.oauth2, "transactionID", "client")
+        data = _.extend data, {user:req.user._data, baseUrl: req.baseUrl}
         res.type("html").send renderTemplate("../views/decision.ejs", data)
 
     decisionAuthCheck = (req,res,next)->
