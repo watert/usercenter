@@ -1,4 +1,4 @@
-var OAuth2Strategy, app, bodyParser, express, passport, request, server, serverHost, session;
+var OAuth2Strategy, app, bodyParser, checkAuth, express, passport, request, server, serverHost, session;
 
 express = require("express");
 
@@ -73,14 +73,25 @@ app.use(function(req, res, next) {
   return next();
 });
 
-app.get("/client/login", passport.authenticate('oauth2'), function(req, res) {
-  session.user = req.user;
-  console.log("req", req.user);
+checkAuth = function(req, res, next) {
+  if (!req.user) {
+    return passport.authenticate('oauth2')(req, res, next);
+  } else {
+    session.user = req.user;
+    return next();
+  }
+};
+
+app.get("/client/login", checkAuth, function(req, res) {
   return res.redirect("/client");
 });
 
-app.get("/client", function(req, res) {
-  console.log("authorized client", req.oauth2);
+app.get("/logout", function(req, res) {
+  req.logOut();
+  return res.json("logout");
+});
+
+app.get("/client", checkAuth, function(req, res, next) {
   return res.json({
     "page": "client",
     user: req.user

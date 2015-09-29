@@ -1,4 +1,4 @@
-var IndexRoute, User, _, crypto, ejs, express, fs, md5, passport, path, renderPage, renderTemplate;
+var IndexRoute, User, _, crypto, ejs, express, fs, md5, passport, path, ref, renderPage, renderTemplate;
 
 _ = require("underscore");
 
@@ -16,33 +16,14 @@ fs = require('fs');
 
 crypto = require("crypto");
 
+ref = require("../views/helpers.coffee"), renderPage = ref.renderPage, renderTemplate = ref.renderTemplate;
+
 md5 = function(_str) {
   return crypto.createHash('md5').update(_str).digest('hex');
 };
 
-renderTemplate = function(filename, data) {
-  var file, filePath, tmpl;
-  filePath = path.join(__dirname, filename);
-  file = fs.readFileSync(filePath, 'utf8');
-  tmpl = ejs.compile(file, {
-    cache: true,
-    filename: "indexview"
-  });
-  return tmpl(data);
-};
-
-renderPage = function(req, res) {
-  var data, html;
-  data = _.pick(req, "baseUrl");
-  _.extend(data, {
-    title: "Common Auth"
-  });
-  html = renderTemplate("../views/indexview.ejs", data);
-  return res.type("html").send(html);
-};
-
 IndexRoute = function(options) {
-  var apiUtils, checkAuth, decisionAuthCheck, oauthserver, router;
+  var OAuth, apiUtils, checkAuth, router;
   router = express.Router();
   router.use(passport.initialize());
   router.use(passport.session());
@@ -89,37 +70,9 @@ IndexRoute = function(options) {
   };
   router.use(apiUtils);
   require("./auth.coffee")(router);
-  checkAuth = function(req, res, next) {
-    var url;
-    if (!req.user) {
-      console.log("not user");
-      url = encodeURIComponent(req.getFullUrl());
-      return res.redirect("/?redirect=" + url);
-    } else {
-      return next();
-    }
-  };
-  oauthserver = require("../oauthserver.coffee");
-  router.get("/oauth/authorize", checkAuth, oauthserver.authorize, function(req, res) {
-    var data;
-    data = {
-      transactionID: req.oauth2.transactionID,
-      user: req.user._data,
-      baseUrl: req.baseUrl
-    };
-    return res.type("html").send(renderTemplate("../views/decision.ejs", data));
-  });
-  decisionAuthCheck = function(req, res, next) {
-    var url;
-    if (!req.user) {
-      url = encodeURIComponent(req.getFullUrl());
-      return res.retFail("Not logined");
-    } else {
-      return next();
-    }
-  };
-  router.post("/oauth/authorize/decision", decisionAuthCheck, oauthserver.server.decision());
-  router.post("/oauth/token", oauthserver.server.token(), oauthserver.server.errorHandler());
+  OAuth = require("./oauth2.coffee");
+  checkAuth = OAuth.checkAuth;
+  router.use("/oauth", OAuth());
   router["delete"]("/api/", checkAuth, function(req, res) {
     return req.user.remove().then(function(ret) {
       return {

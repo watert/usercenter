@@ -83,20 +83,11 @@ class User extends BaseDoc
                 data = _.extend({}, data, password: @hash(data.password))
                 user = new this(data)
                 user.save().then -> user
-    # emailHash:()->
-    #     email = @get("email")
-    #     hash = md5(email)
     @login:(data)->
         if not data.password
             Promise.reject({error:{code:406, message: "no password"},data:data})
-        # console.log "@login",data
         data.password = @hash(data.password)
         @findOne(data).then (user)-> user
-    # @api: ()-> new Dispatcher
-    #     actions:
-    #         register:(data)=> @register.bind(@)
-    #         login:(data)=> @login.bind(@)
-    #         find:(data)=> @find.bind(@)
 
 
 module.exports = User

@@ -1,14 +1,20 @@
-var AccessToken, BasicStrategy, ClientPasswordStrategy, Clients, GrantCode, User, _, authorize, commonClient, exchangeTokenMethod, grantCodeMethod, oauth2orize, passport, q, server, utils,
+var AccessToken, BaseDoc, Clients, GrantCode, User, _, checkAuth, commonClient, exchangeTokenMethod, express, grantCodeMethod, middleware, oauth2orize, q, ref, renderPage, renderTemplate, utils,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
 
+express = require("express");
+
 oauth2orize = require("oauth2orize");
 
-User = require("./models/user.coffee");
+User = require("../models/user.coffee");
 
 q = require("q");
 
 _ = require("underscore");
+
+BaseDoc = require("../models/db.coffee").BaseDoc;
+
+ref = require("../views/helpers.coffee"), renderPage = ref.renderPage, renderTemplate = ref.renderTemplate;
 
 AccessToken = (function(superClass) {
   extend(AccessToken, superClass);
@@ -21,7 +27,7 @@ AccessToken = (function(superClass) {
 
   return AccessToken;
 
-})(require("./models/db.coffee").BaseDoc);
+})(BaseDoc);
 
 GrantCode = (function(superClass) {
   extend(GrantCode, superClass);
@@ -34,7 +40,7 @@ GrantCode = (function(superClass) {
 
   return GrantCode;
 
-})(require("./models/db.coffee").BaseDoc);
+})(BaseDoc);
 
 Clients = (function(superClass) {
   extend(Clients, superClass);
@@ -47,28 +53,22 @@ Clients = (function(superClass) {
 
   return Clients;
 
-})(require("./models/db.coffee").BaseDoc);
+})(BaseDoc);
 
 utils = {
   uid: /*from https://gist.github.com/jed/982883 */ function b(a){return a?(a^Math.random()*16>>a/4).toString(16):([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,b)}
 };
 
-server = oauth2orize.createServer();
-
-commonClient = {
-  id: '-1',
-  type: "unknown"
+checkAuth = function(req, res, next) {
+  var url;
+  if (!req.user) {
+    console.log("not user");
+    url = encodeURIComponent(req.getFullUrl());
+    return res.redirect("/?redirect=" + url);
+  } else {
+    return next();
+  }
 };
-
-server.serializeClient(function(client, done) {
-  console.log("serialize client", client, commonClient.id);
-  return done(null, commonClient.id);
-});
-
-server.deserializeClient(function(id, done) {
-  console.log("deserialize client", id);
-  return done(null, commonClient);
-});
 
 grantCodeMethod = function(client, redirectURI, user, ares, done) {
   var ac, code;
@@ -131,30 +131,63 @@ exchangeTokenMethod = function(client, code, redirectURI, done) {
   });
 };
 
-server.grant(oauth2orize.grant.code(grantCodeMethod));
+commonClient = {
+  id: '-1',
+  type: "unknown"
+};
 
-server.exchange(oauth2orize.exchange.code(exchangeTokenMethod));
+middleware = function(options) {
+  var BasicStrategy, ClientPasswordStrategy, authorize, decisionAuthCheck, passport, router, server;
+  passport = require("passport");
+  BasicStrategy = require("passport-http").BasicStrategy;
+  ClientPasswordStrategy = require('passport-oauth2-client-password').Strategy;
+  passport.use(new BasicStrategy(function(username, password, done) {
+    return done(null, commonClient);
+  }));
+  passport.use(new ClientPasswordStrategy(function(clientID, clientSecret, done) {
+    return done(null, commonClient);
+  }));
+  server = oauth2orize.createServer();
+  server.serializeClient(function(client, done) {
+    console.log("serialize client", client, commonClient.id);
+    return done(null, commonClient.id);
+  });
+  server.deserializeClient(function(id, done) {
+    console.log("deserialize client", id);
+    return done(null, commonClient);
+  });
+  server.grant(oauth2orize.grant.code(grantCodeMethod));
+  server.exchange(oauth2orize.exchange.code(exchangeTokenMethod));
+  authorize = server.authorize(function(clientID, redirectURI, done) {
+    console.log("server.authorize", clientID, redirectURI);
+    return done(null, commonClient, redirectURI);
+  });
+  router = express.Router();
+  router.get("/authorize", checkAuth, authorize, function(req, res) {
+    var data;
+    data = {
+      transactionID: req.oauth2.transactionID,
+      user: req.user._data,
+      baseUrl: req.baseUrl
+    };
+    return res.type("html").send(renderTemplate("../views/decision.ejs", data));
+  });
+  decisionAuthCheck = function(req, res, next) {
+    var url;
+    if (!req.user) {
+      url = encodeURIComponent(req.getFullUrl());
+      return res.retFail("Not logined");
+    } else {
+      return next();
+    }
+  };
+  router.post("/authorize/decision", decisionAuthCheck, server.decision());
+  router.post("/token", server.token(), server.errorHandler());
+  return router;
+};
 
-passport = require("passport");
-
-BasicStrategy = require("passport-http").BasicStrategy;
-
-ClientPasswordStrategy = require('passport-oauth2-client-password').Strategy;
-
-passport.use(new BasicStrategy(function(username, password, done) {
-  return done(null, commonClient);
-}));
-
-passport.use(new ClientPasswordStrategy(function(clientID, clientSecret, done) {
-  return done(null, commonClient);
-}));
-
-authorize = server.authorize(function(clientID, redirectURI, done) {
-  console.log("server.authorize", clientID, redirectURI);
-  return done(null, commonClient, redirectURI);
+_.extend(middleware, {
+  checkAuth: checkAuth
 });
 
-module.exports = {
-  server: server,
-  authorize: authorize
-};
+module.exports = middleware;

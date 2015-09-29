@@ -7,19 +7,10 @@ path = require("path")
 fs = require('fs')
 crypto = require("crypto")
 
+{renderPage, renderTemplate} = require("../views/helpers.coffee")
 md5 = (_str)->
     crypto.createHash('md5').update(_str).digest('hex')
-renderTemplate = (filename, data)->
-    filePath = path.join(__dirname,filename)
-    file = fs.readFileSync(filePath, 'utf8')
-    tmpl = ejs.compile(file, cache:yes, filename:"indexview")
-    return tmpl(data)
-renderPage = (req,res)->
-    # return res.json(req.url)
-    data = _.pick(req,"baseUrl")
-    _.extend(data, {title:"Common Auth"})
-    html = renderTemplate("../views/indexview.ejs",data)
-    res.type("html").send(html)
+
 
 IndexRoute = (options)->
     router = express.Router()
@@ -39,7 +30,6 @@ IndexRoute = (options)->
     router.get("/", renderPage)
     router.get("/profile", renderPage)
     router.get("/login", renderPage)
-
 
     apiUtils = (req,res,next)->
 
@@ -63,32 +53,31 @@ IndexRoute = (options)->
     # APIs with session auth
     #
     # sessionAuth = passport.authenticate('local')
-
-    checkAuth = (req,res,next)->
-        if not req.user
-            console.log "not user"
-            url = encodeURIComponent(req.getFullUrl())
-            res.redirect("/?redirect=#{url}")
-        else
-            next()
+    #
+    # checkAuth = (req,res,next)->
+    #     if not req.user
+    #         console.log "not user"
+    #         url = encodeURIComponent(req.getFullUrl())
+    #         res.redirect("/?redirect=#{url}")
+    #     else
+    #         next()
 
 
     # OAuth server
-    oauthserver = require("../oauthserver.coffee")
-    # app.get "/oauth/authorize/", (req,res)->
-    #     res.json(req.user)
-    # app.get "/api/xxx/", checkAuth, (req,res)->
-    #     res.json(req.user)
-    router.get "/oauth/authorize", checkAuth, oauthserver.authorize, (req,res)->
-        data = transactionID: req.oauth2.transactionID, user:req.user._data, baseUrl: req.baseUrl
-        res.type("html").send renderTemplate("../views/decision.ejs", data)
-    decisionAuthCheck = (req,res,next)->
-        if not req.user
-            url = encodeURIComponent(req.getFullUrl())
-            res.retFail("Not logined")
-        else next()
-    router.post "/oauth/authorize/decision",decisionAuthCheck,oauthserver.server.decision()
-    router.post("/oauth/token", oauthserver.server.token(), oauthserver.server.errorHandler())
+    OAuth = require("./oauth2.coffee")
+    checkAuth = OAuth.checkAuth
+    router.use("/oauth", OAuth())
+    # oauthserver = require("../oauthserver.coffee")
+    # router.get "/oauth/authorize", checkAuth, oauthserver.authorize, (req,res)->
+    #     data = transactionID: req.oauth2.transactionID, user:req.user._data, baseUrl: req.baseUrl
+    #     res.type("html").send renderTemplate("../views/decision.ejs", data)
+    # decisionAuthCheck = (req,res,next)->
+    #     if not req.user
+    #         url = encodeURIComponent(req.getFullUrl())
+    #         res.retFail("Not logined")
+    #     else next()
+    # router.post "/oauth/authorize/decision",decisionAuthCheck,oauthserver.server.decision()
+    # router.post("/oauth/token", oauthserver.server.token(), oauthserver.server.errorHandler())
 
     # API for profile
     router.delete "/api/", checkAuth, (req,res)->
@@ -97,8 +86,6 @@ IndexRoute = (options)->
                 req.logOut()
                 res.ret(ret)
     router.get "/api/", checkAuth, (req,res)->
-        # console.log "GET /api", req.user
-        # console.log "get /api/",req.user
         hash = md5(req.user.get("email"))
         req.user.set({"emailHash": hash})
         res.ret(req.user)

@@ -41,13 +41,28 @@ app.use(require('morgan')('dev'));
 app.use (req,res,next)->
     if user = session.user then req.user = user
     next()
-app.get "/client/login",passport.authenticate('oauth2'), (req,res)->
-    session.user = req.user
-    console.log "req", req.user
+
+
+checkAuth = (req,res,next)->
+    if not req.user
+        passport.authenticate('oauth2')(req,res,next)
+    else
+        session.user = req.user
+        next()
+
+app.get "/client/login",checkAuth, (req,res)->
     res.redirect("/client")
-app.get "/client",(req,res)->
-    console.log "authorized client", req.oauth2
+app.get "/logout",(req,res)->
+    req.logOut()
+    res.json("logout")
+app.get "/client",checkAuth, (req,res,next)->
     res.json({"page":"client", user:req.user})
+
+# app.get "/client",(req,res,next)->
+#     if not req.user then res.redirect("/client/login")
+#     else next()
+# ,(req,res)->
+#     res.json({"page":"client", user:req.user})
 
 
 server = app.listen(3001)
