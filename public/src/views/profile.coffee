@@ -3,6 +3,9 @@ _ = require("underscore")
 Backbone = require("backbone")
 User = require("../models/user.coffee")
 class ProfileView extends Backbone.View
+    events:
+        "click .btn-logout":()->
+            location.href = "logout"
     tmpl: _.template """
         <div class="profile">
             <div class="avatar">

@@ -14,17 +14,19 @@ md5 = (_str)->
 
 IndexRoute = (options={})->
     router = express.Router()
-
+    router.User = User
     app = options.app or router
-    console.log options
+
     app.use(passport.initialize())
     app.use(passport.session())
+    router.use("/public",express.static(path.join(__dirname, '../public')));
 
+    # OAuth server
+    OAuth = require("./oauth2.coffee")
+    checkAuth = OAuth.checkAuth
+    router.use("/oauth", OAuth())
 
     # UI entrance
-    router.get "/user",(req,res)->
-        res.json "/user"
-    router.use("/public",express.static(path.join(__dirname, '../public')));
     router.get "/test", (req,res)->
         html = renderTemplate("../views/index.ejs",{baseUrl:req.baseUrl})
         res.type("html").send(html)
@@ -32,6 +34,10 @@ IndexRoute = (options={})->
     router.get("/", renderPage)
     router.get("/profile", renderPage)
     router.get("/login", renderPage)
+    router.get "/logout", (req,res)->
+        req.logOut()
+        req.session.destroy ->
+            res.redirect(req.baseUrl+"/login")
 
     apiUtils = (req,res,next)->
 
@@ -52,12 +58,6 @@ IndexRoute = (options={})->
 
     require("./auth.coffee")(router)
 
-
-    # OAuth server
-    OAuth = require("./oauth2.coffee")
-    checkAuth = OAuth.checkAuth
-    router.use("/oauth", OAuth())
-
     # API for profile
     router.delete "/api/", checkAuth, (req,res)->
         req.user.remove().then((ret)-> {_data:ret})
@@ -70,7 +70,6 @@ IndexRoute = (options={})->
         res.ret(req.user)
     router.put "/api/", checkAuth, (req,res)->
         res.retPromise req.user.set(_.omit(req.body, "_id")).save()
-    # Actions
     router.post "/api/logout", (req,res)->
         req.logOut()
         res.json("logout")

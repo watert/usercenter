@@ -28,14 +28,14 @@ IndexRoute = function(options) {
     options = {};
   }
   router = express.Router();
+  router.User = User;
   app = options.app || router;
-  console.log(options);
   app.use(passport.initialize());
   app.use(passport.session());
-  router.get("/user", function(req, res) {
-    return res.json("/user");
-  });
   router.use("/public", express["static"](path.join(__dirname, '../public')));
+  OAuth = require("./oauth2.coffee");
+  checkAuth = OAuth.checkAuth;
+  router.use("/oauth", OAuth());
   router.get("/test", function(req, res) {
     var html;
     html = renderTemplate("../views/index.ejs", {
@@ -47,6 +47,12 @@ IndexRoute = function(options) {
   router.get("/", renderPage);
   router.get("/profile", renderPage);
   router.get("/login", renderPage);
+  router.get("/logout", function(req, res) {
+    req.logOut();
+    return req.session.destroy(function() {
+      return res.redirect(req.baseUrl + "/login");
+    });
+  });
   apiUtils = function(req, res, next) {
     req.getFullUrl = function() {
       return req.protocol + "://" + req.get("host") + req.originalUrl;
@@ -75,9 +81,6 @@ IndexRoute = function(options) {
   };
   router.use(apiUtils);
   require("./auth.coffee")(router);
-  OAuth = require("./oauth2.coffee");
-  checkAuth = OAuth.checkAuth;
-  router.use("/oauth", OAuth());
   router["delete"]("/api/", checkAuth, function(req, res) {
     return req.user.remove().then(function(ret) {
       return {

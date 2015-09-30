@@ -12,6 +12,7 @@ let Router = Backbone.Router.extend({
         register: require("./views/register.coffee")
     },
     loadView(viewName){
+        console.log "viewName",viewName
         let View = this.viewClasses[viewName]
         let view = new View()
         view.render()
